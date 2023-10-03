@@ -1,4 +1,4 @@
-module github.com/luverolla/glads
+module github.com/luverolla/lexgo
 
 go 1.21.1
 

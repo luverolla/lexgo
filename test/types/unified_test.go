@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/luverolla/glads/pkg/types"
+	"github.com/luverolla/lexgo/pkg/types"
 )
 
 func TestUnifiedDo(t *testing.T) {

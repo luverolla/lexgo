@@ -1,6 +1,6 @@
 package list
 
-import "github.com/luverolla/glads/pkg/types"
+import "github.com/luverolla/lexgo/pkg/types"
 
 type List[T any] interface {
 	types.Collection[T]

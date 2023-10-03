@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/luverolla/glads/pkg/errs"
-	"github.com/luverolla/glads/pkg/types"
+	"github.com/luverolla/lexgo/pkg/errs"
+	"github.com/luverolla/lexgo/pkg/types"
 )
 
 type ArrayList[T any] struct {
