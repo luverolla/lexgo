@@ -4,13 +4,11 @@ import "fmt"
 
 type Base interface {
 	fmt.Stringer
-	ValueOf() uint32
+	Cmp(any) int
 }
 
-var Empty any
-
 type Iterator[T any] interface {
-	Next() (T, bool)
+	Next() (*T, bool)
 	Each(func(T))
 }
 

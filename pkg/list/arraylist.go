@@ -33,12 +33,25 @@ func (list *ArrayList[T]) String() string {
 	return s
 }
 
-func (list *ArrayList[T]) ValueOf() uint32 {
-	return uint32(len(list.data))
+func (list *ArrayList[T]) Cmp(other any) int {
+	otherList, ok := other.(*ArrayList[T])
+	if !ok {
+		return -1
+	}
+	if len(list.data) != len(otherList.data) {
+		return len(list.data) - len(otherList.data)
+	}
+	for index, value := range list.data {
+		cmp := types.Cmp(value, otherList.data[index])
+		if cmp != 0 {
+			return cmp
+		}
+	}
+	return 0
 }
 
 func (list *ArrayList[T]) Iter() types.Iterator[T] {
-	return newIterator[T](list)
+	return newArlIterator[T](list)
 }
 
 func (list *ArrayList[T]) Size() int {
@@ -58,8 +71,9 @@ func (list *ArrayList[T]) Contains(data T) bool {
 }
 
 func (list *ArrayList[T]) ContainsAll(other types.Collection[T]) bool {
-	for data, ok := other.Iter().Next(); ok; data, ok = other.Iter().Next() {
-		if !list.Contains(data) {
+	iter := other.Iter()
+	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
+		if !list.Contains(*data) {
 			return false
 		}
 	}
@@ -67,8 +81,9 @@ func (list *ArrayList[T]) ContainsAll(other types.Collection[T]) bool {
 }
 
 func (list *ArrayList[T]) ContainsAny(other types.Collection[T]) bool {
-	for data, ok := other.Iter().Next(); ok; data, ok = other.Iter().Next() {
-		if list.Contains(data) {
+	iter := other.Iter()
+	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
+		if list.Contains(*data) {
 			return true
 		}
 	}
@@ -76,6 +91,15 @@ func (list *ArrayList[T]) ContainsAny(other types.Collection[T]) bool {
 }
 
 // --- Methods from List[T] ---
+func (list *ArrayList[T]) Get(index int) T {
+	return list.data[index]
+}
+
+func (list *ArrayList[T]) Set(index int, data T) {
+	index = list.sanify(index)
+	list.data[index] = data
+}
+
 func (list *ArrayList[T]) Append(data ...T) {
 	list.data = append(list.data, data...)
 }
@@ -137,8 +161,6 @@ func (list *ArrayList[T]) Slice(start, end int) List[T] {
 	return NewArrayList(list.data[start:end]...)
 }
 
-// perform quicksort on the list's data and create a new list with the sorted data
-// sort according to the comparator function
 func (list *ArrayList[T]) Sort(comparator types.Comparator[T]) List[T] {
 	data := make([]T, len(list.data))
 	copy(data, list.data)
@@ -159,30 +181,38 @@ func (list *ArrayList[T]) Sublist(filter types.Filter[T]) List[T] {
 	return NewArrayList(data...)
 }
 
+// --- Private methods ---
+func (list *ArrayList[T]) sanify(index int) int {
+	if index < 0 {
+		index += len(list.data)
+	}
+	return index % len(list.data)
+}
+
 // --- Iterator struct and constructor ---
-type iterator[T any] struct {
+type arlIterator[T any] struct {
 	list  *ArrayList[T]
 	index int
 }
 
-func newIterator[T any](list *ArrayList[T]) *iterator[T] {
-	iterator := new(iterator[T])
+func newArlIterator[T any](list *ArrayList[T]) *arlIterator[T] {
+	iterator := new(arlIterator[T])
 	iterator.list = list
 	iterator.index = -1
 	return iterator
 }
 
 // --- Methods from Iterator[T] ---
-func (iterator *iterator[T]) Next() (T, bool) {
+func (iterator *arlIterator[T]) Next() (*T, bool) {
 	iterator.index++
 	if iterator.index >= len(iterator.list.data) {
-		return types.Empty.(T), false
+		return nil, false
 	}
-	return iterator.list.data[iterator.index], true
+	return &iterator.list.data[iterator.index], true
 }
 
-func (iterator *iterator[T]) Each(f func(T)) {
+func (iterator *arlIterator[T]) Each(f func(T)) {
 	for data, ok := iterator.Next(); ok; data, ok = iterator.Next() {
-		f(data)
+		f(*data)
 	}
 }

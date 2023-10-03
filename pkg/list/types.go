@@ -4,6 +4,8 @@ import "github.com/luverolla/lexgo/pkg/types"
 
 type List[T any] interface {
 	types.Collection[T]
+	Get(int) T
+	Set(int, T)
 	Append(...T)
 	Prepend(...T)
 	Insert(int, T)

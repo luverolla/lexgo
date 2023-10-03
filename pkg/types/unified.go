@@ -1,6 +1,8 @@
 package types
 
-import "golang.org/x/exp/constraints"
+import (
+	"golang.org/x/exp/constraints"
+)
 
 func cmp[T constraints.Ordered](a, b T) int {
 	if a == b {
@@ -76,6 +78,6 @@ func Cmp(a, b any) int {
 		if !oka || !okb {
 			panic("[unified.Cmp] CANNOT COMPARE TYPES")
 		}
-		return Cmp(conva.ValueOf(), convb.ValueOf())
+		return conva.Cmp(convb)
 	}
 }
