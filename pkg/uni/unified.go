@@ -5,6 +5,7 @@ import (
 	"hash/fnv"
 	"log"
 	"math"
+	"reflect"
 
 	"golang.org/x/exp/constraints"
 
@@ -15,59 +16,107 @@ func Eq(a, b any) bool {
 	return Cmp(a, b) == 0
 }
 
+func Max(vals ...any) any {
+	if len(vals) == 0 {
+		log.Printf("WARNING: [unified.Max] No values given\r\n")
+		return nil
+	}
+	max := vals[0]
+	for _, val := range vals {
+		if Cmp(val, max) > 0 {
+			max = val
+		}
+	}
+	return max
+}
+
+func Min(vals ...any) any {
+	if len(vals) == 0 {
+		log.Printf("WARNING: [unified.Min] No values given\r\n")
+		return nil
+	}
+	min := vals[0]
+	for _, val := range vals {
+		if Cmp(val, min) < 0 {
+			min = val
+		}
+	}
+	return min
+}
+
 func Cmp(a, b any) int {
 	switch a.(type) {
 	case int:
+		a := a.(int)
+		b := b.(int)
+		return cmp(a, b)
 	case int8:
+		a := a.(int8)
+		b := b.(int8)
+		return cmp(a, b)
 	case int16:
+		a := a.(int16)
+		b := b.(int16)
+		return cmp(a, b)
 	case int32:
+		a := a.(int32)
+		b := b.(int32)
+		return cmp(a, b)
 	case int64:
-		conva := a.(int)
-		convb := b.(int)
-		return cmp(conva, convb)
+		a := a.(int64)
+		b := b.(int64)
+		return cmp(a, b)
 	case uint:
+		a := a.(uint)
+		b := b.(uint)
+		return cmp(a, b)
 	case uint8:
+		a := a.(uint8)
+		b := b.(uint8)
+		return cmp(a, b)
 	case uint16:
+		a := a.(uint16)
+		b := b.(uint16)
+		return cmp(a, b)
 	case uint32:
+		a := a.(uint32)
+		b := b.(uint32)
+		return cmp(a, b)
 	case uint64:
-		conva := a.(uint)
-		convb := b.(uint)
-		return cmp(conva, convb)
+		a := a.(uint64)
+		b := b.(uint64)
+		return cmp(a, b)
 	case float32:
+		a := a.(float32)
+		b := b.(float32)
+		return cmp(a, b)
 	case float64:
-		conva := a.(float64)
-		convb := b.(float64)
-		return cmp(conva, convb)
+		a := a.(float64)
+		b := b.(float64)
+		return cmp(a, b)
 	case string:
-		conva := a.(string)
-		convb := b.(string)
-		return cmp(conva, convb)
+		a := a.(string)
+		b := b.(string)
+		return cmp(a, b)
 	default:
-		conva, oka := a.(types.Comparable)
-		convb, okb := b.(types.Comparable)
+		a, oka := a.(types.Comparable)
+		b, okb := b.(types.Comparable)
 		if !oka || !okb {
-			log.Fatal("ERROR: [unified.Cmp] CANNOT COMPARE TYPES")
+			log.Fatalf("ERROR: [unified.Cmp] Types %T and %T are not comparable\r\n", a, b)
 		}
-		return conva.Cmp(convb)
+		return a.Cmp(b)
 	}
-	return -1
 }
 
-func Hash(v any) uint {
+func Hash(v any) uint32 {
 	switch val := v.(type) {
-	case int:
-	case int8:
-	case int16:
-	case int32:
-	case int64:
-	case uint:
-	case uint8:
-	case uint16:
-	case uint32:
-	case uint64:
-		return uint(val)
-	case float32:
-	case float64:
+	case int, int8, int16, int32, int64:
+		s := reflect.ValueOf(val).Int()
+		return uint32(s)
+	case uint, uint8, uint16, uint32, uint64:
+		s := reflect.ValueOf(val).Uint()
+		return uint32(s)
+	case float32, float64:
 		return hashFloat(v.(float32))
 	case string:
 		return hashString(val)
@@ -78,7 +127,6 @@ func Hash(v any) uint {
 		}
 		return conv.Hash()
 	}
-	return 0
 }
 
 // --- Private variables ---
@@ -96,7 +144,7 @@ func cmp[T constraints.Ordered](a, b T) int {
 	}
 }
 
-func hashFloat(v float32) uint {
+func hashFloat(v float32) uint32 {
 	n := math.Float32bits(v)
 	binary.NativeEndian.PutUint32(buf[:], n)
 	hashgen.Reset()
@@ -104,14 +152,14 @@ func hashFloat(v float32) uint {
 	if err != nil {
 		log.Fatal("ERROR: [unified.Hash] HASHGEN.Write() FAILED")
 	}
-	return uint(hashgen.Sum32())
+	return hashgen.Sum32()
 }
 
-func hashString(v string) uint {
+func hashString(v string) uint32 {
 	hashgen.Reset()
 	_, err := hashgen.Write([]byte(v))
 	if err != nil {
 		log.Fatal("ERROR: [unified.Hash] HASHGEN.Write() FAILED")
 	}
-	return uint(hashgen.Sum32())
+	return hashgen.Sum32()
 }

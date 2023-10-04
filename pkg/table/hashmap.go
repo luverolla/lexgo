@@ -3,6 +3,7 @@ package table
 import (
 	"fmt"
 
+	"github.com/luverolla/lexgo/pkg/errs"
 	"github.com/luverolla/lexgo/pkg/types"
 	"github.com/luverolla/lexgo/pkg/uni"
 	"golang.org/x/exp/constraints"
@@ -97,12 +98,12 @@ func (table *HashMap[K, V]) ContainsAny(other types.Collection[K]) bool {
 }
 
 // --- Methods from Map[K, V] ---
-func (table *HashMap[K, V]) Get(key K) (*V, bool) {
+func (table *HashMap[K, V]) Get(key K) (*V, error) {
 	index := table.indexOf(key)
 	if index == -1 {
-		return nil, false
+		return nil, errs.NotFound()
 	}
-	return &table.inner[index].value, true
+	return &table.inner[index].value, nil
 }
 
 func (table *HashMap[K, V]) Put(key K, value V) {
@@ -115,13 +116,19 @@ func (table *HashMap[K, V]) Put(key K, value V) {
 	}
 }
 
-func (table *HashMap[K, V]) Remove(key K) {
+func (table *HashMap[K, V]) HasKey(key K) bool {
+	return table.Contains(key)
+}
+
+func (table *HashMap[K, V]) Remove(key K) (*V, error) {
 	index := table.indexOf(key)
 	if index == -1 {
-		return
+		return nil, errs.NotFound()
 	}
+	value := table.inner[index].value
 	table.inner = append(table.inner[:index], table.inner[index+1:]...)
 	table.size--
+	return &value, nil
 }
 
 func (table *HashMap[K, V]) Keys() types.Iterator[K] {
@@ -193,12 +200,12 @@ func (table *HashMap[K, V]) indexOf(key K) int {
 }
 
 func (table *HashMap[K, V]) hash1(key K) uint {
-	return uni.Hash(key) % uint(table.size)
+	return uint(uni.Hash(key) % uint32(table.size))
 }
 
 func (table *HashMap[K, V]) hash2(key K) uint {
-	PRIME := uint(7)
-	return PRIME - (uni.Hash(key) % PRIME)
+	PRIME := uint32(7)
+	return uint(PRIME - (uni.Hash(key) % PRIME))
 }
 
 func (table *HashMap[K, V]) hash(key K, i int) uint {

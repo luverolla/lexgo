@@ -3,7 +3,7 @@ package types
 import "fmt"
 
 type Hashable interface {
-	Hash() uint
+	Hash() uint32
 }
 
 type Comparable interface {

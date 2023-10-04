@@ -12,12 +12,17 @@ import (
 
 type AVL[T any] struct {
 	root *avlNode[T]
+	cmp  types.Comparator[T]
 	size int
 }
 
-// --- Constructor ---
+// --- Constructors ---
 func NewAVL[T any]() *AVL[T] {
-	return &AVL[T]{nil, 0}
+	return &AVL[T]{nil, nil, 0}
+}
+
+func NewAVLCmp[T any](cmp types.Comparator[T]) *AVL[T] {
+	return &AVL[T]{nil, cmp, 0}
 }
 
 // --- Methods from Collection[T] ---
@@ -49,7 +54,7 @@ func (t *AVL[T]) Cmp(other any) int {
 	next, hasNext := iter.Next()
 	otherNext, hasOtherNext := otherIter.Next()
 	for hasNext && hasOtherNext {
-		cmp := uni.Cmp(*next, *otherNext)
+		cmp := t.compare(*next, *otherNext)
 		if cmp != 0 {
 			return cmp
 		}
@@ -73,7 +78,7 @@ func (t *AVL[T]) Clear() {
 }
 
 func (t *AVL[T]) Contains(val T) bool {
-	return t.root.contains(val)
+	return t.contains(t.root, val)
 }
 
 func (t *AVL[T]) ContainsAll(c types.Collection[T]) bool {
@@ -102,7 +107,7 @@ func (t *AVL[T]) Iter() types.Iterator[T] {
 
 // --- Methods from BSTree[T] ---
 func (t *AVL[T]) Get(val T) colls.BSTreeNode[T] {
-	node := t.root.getNode(val)
+	node := t.getNode(t.root, val)
 	if node == nil {
 		return nil
 	}
@@ -114,34 +119,34 @@ func (t *AVL[T]) Root() colls.BSTreeNode[T] {
 }
 
 func (t *AVL[T]) Insert(val T) colls.BSTreeNode[T] {
-	t.root = t.root.insert(val)
+	t.root = t.insert(t.root, val)
 	t.size++
 	return t.root
 }
 
 func (t *AVL[T]) Remove(val T) colls.BSTreeNode[T] {
-	t.root = t.root.remove(val)
 	if t.root == nil {
 		return nil
 	}
+	t.root = t.remove(t.root, val)
 	t.size--
 	return t.root
 }
 
 func (t *AVL[T]) Min() colls.BSTreeNode[T] {
-	return t.root.min()
+	return t.min(t.root)
 }
 
 func (t *AVL[T]) Max() colls.BSTreeNode[T] {
-	return t.root.max()
+	return t.max(t.root)
 }
 
 func (t *AVL[T]) Pred(val T) colls.BSTreeNode[T] {
-	return t.root.pred(val)
+	return t.pred(t.root, val)
 }
 
 func (t *AVL[T]) Succ(val T) colls.BSTreeNode[T] {
-	return t.root.succ(val)
+	return t.succ(t.root, val)
 }
 
 func (t *AVL[T]) PreOrder() types.Iterator[T] {
@@ -154,6 +159,14 @@ func (t *AVL[T]) InOrder() types.Iterator[T] {
 
 func (t *AVL[T]) PostOrder() types.Iterator[T] {
 	return newAVLPostOrderIterator(t)
+}
+
+// --- Private Methods ---
+func (t *AVL[T]) compare(a, b T) int {
+	if t.cmp == nil {
+		return uni.Cmp(a, b)
+	}
+	return t.cmp(a, b)
 }
 
 // --- Node struct and methods ---
@@ -175,41 +188,41 @@ func (n *avlNode[T]) Right() colls.BSTreeNode[T] {
 	return n.right
 }
 
-func (n *avlNode[T]) getNode(val T) *avlNode[T] {
+func (t *AVL[T]) getNode(n *avlNode[T], val T) *avlNode[T] {
 	if n == nil {
 		return nil
 	}
 	switch {
-	case uni.Cmp(val, n.val) < 0:
-		return n.left.getNode(val)
-	case uni.Cmp(val, n.val) > 0:
-		return n.right.getNode(val)
+	case t.compare(val, n.val) < 0:
+		return t.getNode(n.left, val)
+	case t.compare(val, n.val) > 0:
+		return t.getNode(n.right, val)
 	}
 	return n
 }
 
-func (n *avlNode[T]) insert(val T) *avlNode[T] {
+func (t *AVL[T]) insert(n *avlNode[T], val T) *avlNode[T] {
 	if n == nil {
 		return &avlNode[T]{val, nil, nil}
 	}
 	switch {
-	case uni.Cmp(val, n.val) < 0:
-		n.left = n.left.insert(val)
-	case uni.Cmp(val, n.val) > 0:
-		n.right = n.right.insert(val)
+	case t.compare(val, n.val) < 0:
+		n.left = t.insert(n.left, val)
+	case t.compare(val, n.val) > 0:
+		n.right = t.insert(n.right, val)
 	}
-	return n.rebalance()
+	return t.rebalance(n)
 }
 
-func (n *avlNode[T]) remove(val T) *avlNode[T] {
+func (t *AVL[T]) remove(n *avlNode[T], val T) *avlNode[T] {
 	if n == nil {
 		return nil
 	}
 	switch {
-	case uni.Cmp(val, n.val) < 0:
-		n.left = n.left.remove(val)
-	case uni.Cmp(val, n.val) > 0:
-		n.right = n.right.remove(val)
+	case t.compare(val, n.val) < 0:
+		n.left = t.remove(n.left, val)
+	case t.compare(val, n.val) > 0:
+		n.right = t.remove(n.right, val)
 	default:
 		if n.left == nil {
 			return n.right
@@ -217,105 +230,105 @@ func (n *avlNode[T]) remove(val T) *avlNode[T] {
 		if n.right == nil {
 			return n.left
 		}
-		n.val = n.right.min().val
-		n.right = n.right.remove(n.val)
+		n.val = t.min(n.right).val
+		n.right = t.remove(n.right, n.val)
 	}
-	return n.rebalance()
+	return t.rebalance(n)
 }
 
-func (n *avlNode[T]) contains(val T) bool {
-	return n.getNode(val) != nil
+func (t *AVL[T]) contains(n *avlNode[T], val T) bool {
+	return t.getNode(n, val) != nil
 }
 
-func (n *avlNode[T]) min() *avlNode[T] {
+func (t *AVL[T]) min(n *avlNode[T]) *avlNode[T] {
 	if n.left == nil {
 		return n
 	}
-	return n.left.min()
+	return t.min(n.left)
 }
 
-func (n *avlNode[T]) max() *avlNode[T] {
+func (t *AVL[T]) max(n *avlNode[T]) *avlNode[T] {
 	if n.right == nil {
 		return n
 	}
-	return n.right.max()
+	return t.max(n.right)
 }
 
-func (n *avlNode[T]) pred(val T) *avlNode[T] {
+func (t *AVL[T]) pred(n *avlNode[T], val T) *avlNode[T] {
 	if n == nil {
 		return nil
 	}
 	switch {
-	case uni.Cmp(val, n.val) < 0:
-		return n.left.pred(val)
-	case uni.Cmp(val, n.val) > 0:
-		return n.right.pred(val)
+	case t.compare(val, n.val) < 0:
+		return t.pred(n.left, val)
+	case t.compare(val, n.val) > 0:
+		return t.pred(n.right, val)
 	default:
 		if n.left != nil {
-			return n.left.max()
+			return t.max(n.left)
 		}
 	}
 	return n
 }
 
-func (n *avlNode[T]) succ(val T) *avlNode[T] {
+func (t *AVL[T]) succ(n *avlNode[T], val T) *avlNode[T] {
 	if n == nil {
 		return nil
 	}
 	switch {
-	case uni.Cmp(val, n.val) < 0:
-		return n.left.succ(val)
-	case uni.Cmp(val, n.val) > 0:
-		return n.right.succ(val)
+	case t.compare(val, n.val) < 0:
+		return t.succ(n.left, val)
+	case t.compare(val, n.val) > 0:
+		return t.succ(n.right, val)
 	default:
 		if n.right != nil {
-			return n.right.min()
+			return t.min(n.right)
 		}
 	}
 	return n
 }
 
-func (n *avlNode[T]) height() int {
+func (t *AVL[T]) height(n *avlNode[T]) int {
 	if n == nil {
 		return 0
 	}
-	return 1 + max(n.left.height(), n.right.height())
+	return 1 + max(t.height(n.left), t.height(n.right))
 }
 
-func (n *avlNode[T]) balanceFactor() int {
+func (t *AVL[T]) balanceFactor(n *avlNode[T]) int {
 	if n == nil {
 		return 0
 	}
-	return n.left.height() - n.right.height()
+	return t.height(n.left) - t.height(n.right)
 }
 
-func (n *avlNode[T]) rotateLeft() *avlNode[T] {
+func (t *AVL[T]) rotateLeft(n *avlNode[T]) *avlNode[T] {
 	x := n.right
 	n.right = x.left
 	x.left = n
 	return x
 }
 
-func (n *avlNode[T]) rotateRight() *avlNode[T] {
+func (t *AVL[T]) rotateRight(n *avlNode[T]) *avlNode[T] {
 	x := n.left
 	n.left = x.right
 	x.right = n
 	return x
 }
 
-func (n *avlNode[T]) rebalance() *avlNode[T] {
-	bf := n.balanceFactor()
+func (t *AVL[T]) rebalance(n *avlNode[T]) *avlNode[T] {
+	bf := t.balanceFactor(n)
 	switch {
 	case bf < -1:
-		if n.right.balanceFactor() > 0 {
-			n.right = n.right.rotateRight()
+		if t.balanceFactor(n.right) > 0 {
+			n.right = t.rotateRight(n.right)
 		}
-		return n.rotateLeft()
+		return t.rotateLeft(n)
 	case bf > 1:
-		if n.left.balanceFactor() < 0 {
-			n.left = n.left.rotateLeft()
+		if t.balanceFactor(n.left) < 0 {
+			n.left = t.rotateLeft(n.left)
 		}
-		return n.rotateRight()
+		return t.rotateRight(n)
 	}
 	return n
 }
