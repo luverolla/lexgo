@@ -10,7 +10,7 @@ var tm_keys = []string{"ciao", "becco", "hey!", "castoro"}
 var tm_vals = []bool{true, false, true, false}
 
 func TestAVLMapAdd(t *testing.T) {
-	tm := table.NewAVLTreeMap[string, bool]()
+	tm := table.AVL[string, bool]()
 
 	if tm.Size() != 0 {
 		t.Errorf("AVLMap size is %d, expected %d", tm.Size(), 0)
@@ -42,7 +42,7 @@ func TestAVLMapAdd(t *testing.T) {
 }
 
 func TestAVLMapGet(t *testing.T) {
-	tm := table.NewAVLTreeMap[string, bool]()
+	tm := table.AVL[string, bool]()
 	for i, k := range tm_keys {
 		tm.Put(k, tm_vals[i])
 	}
@@ -56,7 +56,7 @@ func TestAVLMapGet(t *testing.T) {
 }
 
 func TestAVLMapRemove(t *testing.T) {
-	tm_copy := table.NewAVLTreeMap[string, bool]()
+	tm_copy := table.AVL[string, bool]()
 	for i, k := range tm_keys {
 		tm_copy.Put(k, tm_vals[i])
 	}
@@ -80,7 +80,7 @@ func TestAVLMapRemove(t *testing.T) {
 }
 
 func TestAVLMapIter(t *testing.T) {
-	tm := table.NewAVLTreeMap[string, bool]()
+	tm := table.AVL[string, bool]()
 	for i, k := range tm_keys {
 		tm.Put(k, tm_vals[i])
 	}

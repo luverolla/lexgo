@@ -14,8 +14,8 @@ var arl_int colls.List[int]
 var arl_str colls.List[string]
 
 func TestArrayListAdd(t *testing.T) {
-	arl_int = list.NewArray[int](data_int_2...)
-	arl_str = list.NewArray[string](data_str_2...)
+	arl_int = list.Arr[int](data_int_2...)
+	arl_str = list.Arr[string](data_str_2...)
 
 	if arl_int.Size() != len(data_int_2) {
 		t.Errorf("ArrayList[int] size is %d, expected %d", arl_int.Size(), len(data_int_2))
@@ -61,8 +61,8 @@ func TestArrayListSet(t *testing.T) {
 }
 
 func TestArrayListRemove(t *testing.T) {
-	arl_int_copy := list.NewArray[int](data_int_2...)
-	arl_str_copy := list.NewArray[string](data_str_2...)
+	arl_int_copy := list.Arr[int](data_int_2...)
+	arl_str_copy := list.Arr[string](data_str_2...)
 
 	idxToRemoveInt := 2
 	idxToRemoveStr := 1
@@ -108,8 +108,8 @@ func TestArrayListRemove(t *testing.T) {
 }
 
 func TestArrayListRemoveBulk(t *testing.T) {
-	arl_int_copy := list.NewArray[int](data_int_2...)
-	arl_str_copy := list.NewArray[string](data_str_2...)
+	arl_int_copy := list.Arr[int](data_int_2...)
+	arl_str_copy := list.Arr[string](data_str_2...)
 
 	intToRemove := 9
 	strToRemove := ""
@@ -161,8 +161,8 @@ func TestArrayListRemoveBulk(t *testing.T) {
 }
 
 func TestArrayListContains(t *testing.T) {
-	arl_int_copy := list.NewArray[int](data_int_2...)
-	arl_str_copy := list.NewArray[string](data_str_2...)
+	arl_int_copy := list.Arr[int](data_int_2...)
+	arl_str_copy := list.Arr[string](data_str_2...)
 
 	for _, v := range data_int_2 {
 		if !arl_int_copy.Contains(v) {
@@ -179,14 +179,14 @@ func TestArrayListContains(t *testing.T) {
 
 func TestArrayListContainsAll(t *testing.T) {
 
-	arl_int_copy := list.NewArray[int](data_int_2...)
-	arl_str_copy := list.NewArray[string](data_str_2...)
+	arl_int_copy := list.Arr[int](data_int_2...)
+	arl_str_copy := list.Arr[string](data_str_2...)
 
-	if !arl_int_copy.ContainsAll(list.NewArray[int](data_int_2...)) {
+	if !arl_int_copy.ContainsAll(list.Arr[int](data_int_2...)) {
 		t.Errorf("ArrayList[int] ContainsAll(ArrayList[int]) is false, expected true")
 	}
 
-	if !arl_str_copy.ContainsAll(list.NewArray[string](data_str_2...)) {
+	if !arl_str_copy.ContainsAll(list.Arr[string](data_str_2...)) {
 		t.Errorf("ArrayList[string] ContainsAll(ArrayList[string]) is false, expected true")
 	}
 }
@@ -196,11 +196,11 @@ func TestArrayListContainsAny(t *testing.T) {
 	test_data_int := []int{1000, 10, 0, 0, 9, 0, 1000}
 	test_data_str := []string{"alpha", "beta", "becco", "gamma", "lambda"}
 
-	sub_int := list.NewArray[int](test_data_int...)
-	sub_str := list.NewArray[string](test_data_str...)
+	sub_int := list.Arr[int](test_data_int...)
+	sub_str := list.Arr[string](test_data_str...)
 
-	arl_int_copy := list.NewArray[int](data_int_2...)
-	arl_str_copy := list.NewArray[string](data_str_2...)
+	arl_int_copy := list.Arr[int](data_int_2...)
+	arl_str_copy := list.Arr[string](data_str_2...)
 
 	if !arl_int_copy.ContainsAny(sub_int) {
 		t.Errorf("ArrayList[int] ContainsAny(ArrayList[int]) is false, expected true")

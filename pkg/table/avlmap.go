@@ -5,51 +5,51 @@ import (
 	"log"
 
 	"github.com/luverolla/lexgo/pkg/errs"
+	"github.com/luverolla/lexgo/pkg/gx"
 	"github.com/luverolla/lexgo/pkg/tree"
 	"github.com/luverolla/lexgo/pkg/types"
-	"github.com/luverolla/lexgo/pkg/uni"
 	"golang.org/x/exp/constraints"
 )
 
-type AVLTreeMap[K constraints.Ordered, V any] struct {
-	tree *tree.AVL[avlEntry[K, V]]
+type AVLMap[K constraints.Ordered, V any] struct {
+	tree *tree.AVLTree[avlEntry[K, V]]
 }
 
 // --- Constructor ---
-func NewAVLTreeMap[K constraints.Ordered, V any]() *AVLTreeMap[K, V] {
-	return &AVLTreeMap[K, V]{tree.NewAVL[avlEntry[K, V]]()}
+func AVL[K constraints.Ordered, V any]() *AVLMap[K, V] {
+	return &AVLMap[K, V]{tree.AVL[avlEntry[K, V]]()}
 }
 
 // --- Methods from Collection[MapEntry[K, V]] ---
-func (table *AVLTreeMap[K, V]) String() string {
+func (table *AVLMap[K, V]) String() string {
 	return table.tree.String()
 }
 
-func (table *AVLTreeMap[K, V]) Cmp(other any) int {
+func (table *AVLMap[K, V]) Cmp(other any) int {
 	return table.tree.Cmp(other)
 }
 
-func (table *AVLTreeMap[K, V]) Iter() types.Iterator[K] {
+func (table *AVLMap[K, V]) Iter() types.Iterator[K] {
 	return newAvlKeyIter[K](table)
 }
 
-func (table *AVLTreeMap[K, V]) Size() int {
+func (table *AVLMap[K, V]) Size() int {
 	return table.tree.Size()
 }
 
-func (table *AVLTreeMap[K, V]) Empty() bool {
+func (table *AVLMap[K, V]) Empty() bool {
 	return table.tree.Empty()
 }
 
-func (table *AVLTreeMap[K, V]) Clear() {
+func (table *AVLMap[K, V]) Clear() {
 	table.tree.Clear()
 }
 
-func (table *AVLTreeMap[K, V]) Contains(val K) bool {
+func (table *AVLMap[K, V]) Contains(val K) bool {
 	return table.tree.Contains(avlEntry[K, V]{val, nil})
 }
 
-func (table *AVLTreeMap[K, V]) ContainsAll(c types.Collection[K]) bool {
+func (table *AVLMap[K, V]) ContainsAll(c types.Collection[K]) bool {
 	iter := c.Iter()
 	for next, hasNext := iter.Next(); hasNext; next, hasNext = iter.Next() {
 		if !table.Contains(*next) {
@@ -59,7 +59,7 @@ func (table *AVLTreeMap[K, V]) ContainsAll(c types.Collection[K]) bool {
 	return true
 }
 
-func (table *AVLTreeMap[K, V]) ContainsAny(c types.Collection[K]) bool {
+func (table *AVLMap[K, V]) ContainsAny(c types.Collection[K]) bool {
 	iter := c.Iter()
 	for next, hasNext := iter.Next(); hasNext; next, hasNext = iter.Next() {
 		if table.Contains(*next) {
@@ -70,7 +70,7 @@ func (table *AVLTreeMap[K, V]) ContainsAny(c types.Collection[K]) bool {
 }
 
 // --- Methods from Map[K, V] ---
-func (table *AVLTreeMap[K, V]) Get(key K) (*V, error) {
+func (table *AVLMap[K, V]) Get(key K) (*V, error) {
 	if table.Empty() {
 		return nil, errs.Empty()
 	}
@@ -82,16 +82,16 @@ func (table *AVLTreeMap[K, V]) Get(key K) (*V, error) {
 	return node.Value().value, nil
 }
 
-func (table *AVLTreeMap[K, V]) HasKey(key K) bool {
+func (table *AVLMap[K, V]) HasKey(key K) bool {
 	return table.Contains(key)
 }
 
-func (table *AVLTreeMap[K, V]) Put(key K, value V) {
+func (table *AVLMap[K, V]) Put(key K, value V) {
 	entry := avlEntry[K, V]{key, &value}
 	table.tree.Insert(entry)
 }
 
-func (table *AVLTreeMap[K, V]) Remove(key K) (*V, error) {
+func (table *AVLMap[K, V]) Remove(key K) (*V, error) {
 	if table.Empty() {
 		return nil, errs.Empty()
 	}
@@ -104,11 +104,11 @@ func (table *AVLTreeMap[K, V]) Remove(key K) (*V, error) {
 	return node.Value().value, nil
 }
 
-func (table *AVLTreeMap[K, V]) Keys() types.Iterator[K] {
+func (table *AVLMap[K, V]) Keys() types.Iterator[K] {
 	return table.Iter()
 }
 
-func (table *AVLTreeMap[K, V]) Values() types.Iterator[V] {
+func (table *AVLMap[K, V]) Values() types.Iterator[V] {
 	return newAvlValueIter[K](table)
 }
 
@@ -117,7 +117,7 @@ type avlKeyIter[K constraints.Ordered, V any] struct {
 	inner types.Iterator[avlEntry[K, V]]
 }
 
-func newAvlKeyIter[K constraints.Ordered, V any](table *AVLTreeMap[K, V]) *avlKeyIter[K, V] {
+func newAvlKeyIter[K constraints.Ordered, V any](table *AVLMap[K, V]) *avlKeyIter[K, V] {
 	return &avlKeyIter[K, V]{table.tree.InOrder()}
 }
 
@@ -139,7 +139,7 @@ type avlValueIter[K constraints.Ordered, V any] struct {
 	inner types.Iterator[avlEntry[K, V]]
 }
 
-func newAvlValueIter[K constraints.Ordered, V any](table *AVLTreeMap[K, V]) *avlValueIter[K, V] {
+func newAvlValueIter[K constraints.Ordered, V any](table *AVLMap[K, V]) *avlValueIter[K, V] {
 	return &avlValueIter[K, V]{table.tree.InOrder()}
 }
 
@@ -168,7 +168,7 @@ func (entry avlEntry[K, V]) Cmp(other any) int {
 	if !ok {
 		log.Fatalf("ERROR: [table.AVLTreeMap] right hand side of comparison is not an AVL entry")
 	}
-	return uni.Cmp(entry.key, oth.key)
+	return gx.Cmp(entry.key, oth.key)
 }
 
 func (entry avlEntry[K, V]) String() string {

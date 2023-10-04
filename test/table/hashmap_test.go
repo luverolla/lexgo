@@ -10,7 +10,7 @@ var hm_keys = []string{"ciao", "becco", "hey!", "castoro"}
 var hm_vals = []bool{true, false, true, false}
 
 func TestHashMapAdd(t *testing.T) {
-	hm := table.NewHashMap[string, bool]()
+	hm := table.Hsh[string, bool]()
 	if hm.Size() != 0 {
 		t.Errorf("HashMap size is %d, expected %d", hm.Size(), 0)
 	}
@@ -41,7 +41,7 @@ func TestHashMapAdd(t *testing.T) {
 }
 
 func TestHashMapGet(t *testing.T) {
-	hm := table.NewHashMap[string, bool]()
+	hm := table.Hsh[string, bool]()
 	for i, k := range hm_keys {
 		hm.Put(k, hm_vals[i])
 	}
@@ -55,7 +55,7 @@ func TestHashMapGet(t *testing.T) {
 }
 
 func TestHashMapRemove(t *testing.T) {
-	hm_copy := table.NewHashMap[string, bool]()
+	hm_copy := table.Hsh[string, bool]()
 	for i, k := range hm_keys {
 		hm_copy.Put(k, hm_vals[i])
 	}
@@ -79,7 +79,7 @@ func TestHashMapRemove(t *testing.T) {
 }
 
 func TestHashMapIter(t *testing.T) {
-	hm := table.NewHashMap[string, bool]()
+	hm := table.Hsh[string, bool]()
 	for i, k := range hm_keys {
 		hm.Put(k, hm_vals[i])
 	}

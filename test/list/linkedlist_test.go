@@ -14,8 +14,8 @@ var lkl_int colls.List[int]
 var lkl_str colls.List[string]
 
 func TestLinkedListAdd(t *testing.T) {
-	lkl_int = list.NewLinked[int](data_int...)
-	lkl_str = list.NewLinked[string](data_str...)
+	lkl_int = list.Lkd[int](data_int...)
+	lkl_str = list.Lkd[string](data_str...)
 
 	if lkl_int.Size() != len(data_int) {
 		t.Errorf("LinkedList[int] size is %d, expected %d", lkl_int.Size(), len(data_int))
@@ -61,8 +61,8 @@ func TestLinkedListSet(t *testing.T) {
 }
 
 func TestLinkedListRemove(t *testing.T) {
-	lkl_int_copy := list.NewLinked[int](data_int...)
-	lkl_str_copy := list.NewLinked[string](data_str...)
+	lkl_int_copy := list.Lkd[int](data_int...)
+	lkl_str_copy := list.Lkd[string](data_str...)
 
 	idxToRemoveInt := 2
 	idxToRemoveStr := 1
@@ -108,8 +108,8 @@ func TestLinkedListRemove(t *testing.T) {
 }
 
 func TestLinkedListRemoveBulk(t *testing.T) {
-	lkl_int_copy := list.NewLinked[int](data_int...)
-	lkl_str_copy := list.NewLinked[string](data_str...)
+	lkl_int_copy := list.Lkd[int](data_int...)
+	lkl_str_copy := list.Lkd[string](data_str...)
 
 	intToRemove := 9
 	strToRemove := ""
@@ -161,8 +161,8 @@ func TestLinkedListRemoveBulk(t *testing.T) {
 }
 
 func TestLinkedListContains(t *testing.T) {
-	lkl_int_copy := list.NewLinked[int](data_int...)
-	lkl_str_copy := list.NewLinked[string](data_str...)
+	lkl_int_copy := list.Lkd[int](data_int...)
+	lkl_str_copy := list.Lkd[string](data_str...)
 
 	for _, v := range data_int {
 		if !lkl_int_copy.Contains(v) {
@@ -179,14 +179,14 @@ func TestLinkedListContains(t *testing.T) {
 
 func TestLinkedListContainsAll(t *testing.T) {
 
-	lkl_int_copy := list.NewLinked[int](data_int...)
-	lkl_str_copy := list.NewLinked[string](data_str...)
+	lkl_int_copy := list.Lkd[int](data_int...)
+	lkl_str_copy := list.Lkd[string](data_str...)
 
-	if !lkl_int_copy.ContainsAll(list.NewLinked[int](data_int...)) {
+	if !lkl_int_copy.ContainsAll(list.Lkd[int](data_int...)) {
 		t.Errorf("LinkedList[int] ContainsAll(LinkedList[int]) is false, expected true")
 	}
 
-	if !lkl_str_copy.ContainsAll(list.NewLinked[string](data_str...)) {
+	if !lkl_str_copy.ContainsAll(list.Lkd[string](data_str...)) {
 		t.Errorf("LinkedList[string] ContainsAll(LinkedList[string]) is false, expected true")
 	}
 }
@@ -196,11 +196,11 @@ func TestLinkedListContainsAny(t *testing.T) {
 	test_data_int := []int{1000, 10, 0, 0, 9, 0, 1000}
 	test_data_str := []string{"alpha", "beta", "becco", "gamma", "lambda"}
 
-	sub_int := list.NewLinked[int](test_data_int...)
-	sub_str := list.NewLinked[string](test_data_str...)
+	sub_int := list.Lkd[int](test_data_int...)
+	sub_str := list.Lkd[string](test_data_str...)
 
-	lkl_int_copy := list.NewLinked[int](data_int...)
-	lkl_str_copy := list.NewLinked[string](data_str...)
+	lkl_int_copy := list.Lkd[int](data_int...)
+	lkl_str_copy := list.Lkd[string](data_str...)
 
 	if !lkl_int_copy.ContainsAny(sub_int) {
 		t.Errorf("LinkedList[int] ContainsAny(LinkedList[int]) is false, expected true")

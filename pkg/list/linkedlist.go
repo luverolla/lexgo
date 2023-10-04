@@ -7,25 +7,25 @@ import (
 
 	"github.com/luverolla/lexgo/pkg/colls"
 	"github.com/luverolla/lexgo/pkg/errs"
+	"github.com/luverolla/lexgo/pkg/gx"
 	"github.com/luverolla/lexgo/pkg/types"
-	"github.com/luverolla/lexgo/pkg/uni"
 )
 
-type Linked[T any] struct {
+type LkdList[T any] struct {
 	head *node[T]
 	tail *node[T]
 	size int
 }
 
 // --- Constructors ---
-func NewLinked[T any](data ...T) *Linked[T] {
-	list := new(Linked[T])
+func Lkd[T any](data ...T) *LkdList[T] {
+	list := new(LkdList[T])
 	list.Append(data...)
 	return list
 }
 
 // --- Methods from Collection[T] ---
-func (list *Linked[T]) String() string {
+func (list *LkdList[T]) String() string {
 	s := "Linked["
 	iter := list.Iter()
 	next, hasNext := iter.Next()
@@ -40,8 +40,8 @@ func (list *Linked[T]) String() string {
 	return s
 }
 
-func (list *Linked[T]) Cmp(other any) int {
-	otherList, ok := other.(*Linked[T])
+func (list *LkdList[T]) Cmp(other any) int {
+	otherList, ok := other.(*LkdList[T])
 	if !ok {
 		return -1
 	}
@@ -53,7 +53,7 @@ func (list *Linked[T]) Cmp(other any) int {
 	next, hasNext := iter.Next()
 	otherNext, hasOtherNext := otherIter.Next()
 	for hasNext && hasOtherNext {
-		cmp := uni.Cmp(*next, *otherNext)
+		cmp := gx.Cmp(*next, *otherNext)
 		if cmp != 0 {
 			return cmp
 		}
@@ -63,29 +63,29 @@ func (list *Linked[T]) Cmp(other any) int {
 	return 0
 }
 
-func (list *Linked[T]) Iter() types.Iterator[T] {
-	return newLklIterator[T](list)
+func (list *LkdList[T]) Iter() types.Iterator[T] {
+	return newLklIter[T](list)
 }
 
-func (list *Linked[T]) Size() int {
+func (list *LkdList[T]) Size() int {
 	return list.size
 }
 
-func (list *Linked[T]) Empty() bool {
+func (list *LkdList[T]) Empty() bool {
 	return list.size == 0
 }
 
-func (list *Linked[T]) Clear() {
+func (list *LkdList[T]) Clear() {
 	list.head = nil
 	list.tail = nil
 	list.size = 0
 }
 
-func (list *Linked[T]) Contains(data T) bool {
+func (list *LkdList[T]) Contains(data T) bool {
 	return list.IndexOf(data) != -1
 }
 
-func (list *Linked[T]) ContainsAll(other types.Collection[T]) bool {
+func (list *LkdList[T]) ContainsAll(other types.Collection[T]) bool {
 	iter := other.Iter()
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		if !list.Contains(*data) {
@@ -95,7 +95,7 @@ func (list *Linked[T]) ContainsAll(other types.Collection[T]) bool {
 	return true
 }
 
-func (list *Linked[T]) ContainsAny(other types.Collection[T]) bool {
+func (list *LkdList[T]) ContainsAny(other types.Collection[T]) bool {
 	iter := other.Iter()
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		if list.Contains(*data) {
@@ -106,7 +106,7 @@ func (list *Linked[T]) ContainsAny(other types.Collection[T]) bool {
 }
 
 // --- Methods from List[T] ---
-func (list *Linked[T]) Append(data ...T) {
+func (list *LkdList[T]) Append(data ...T) {
 	for _, value := range data {
 		newTail := &node[T]{data: value}
 		if list.tail == nil {
@@ -120,7 +120,7 @@ func (list *Linked[T]) Append(data ...T) {
 	list.size += len(data)
 }
 
-func (list *Linked[T]) Prepend(data ...T) {
+func (list *LkdList[T]) Prepend(data ...T) {
 	for _, value := range data {
 		newHead := &node[T]{data: value}
 		if list.head == nil {
@@ -134,7 +134,7 @@ func (list *Linked[T]) Prepend(data ...T) {
 	list.size += len(data)
 }
 
-func (list *Linked[T]) Insert(index int, data T) {
+func (list *LkdList[T]) Insert(index int, data T) {
 	index = index % list.size
 	if index < 0 {
 		index += list.size
@@ -152,7 +152,7 @@ func (list *Linked[T]) Insert(index int, data T) {
 	list.size++
 }
 
-func (list *Linked[T]) RemoveFirst(data T) error {
+func (list *LkdList[T]) RemoveFirst(data T) error {
 	index := list.IndexOf(data)
 	if index == -1 {
 		return errs.NotFound()
@@ -161,7 +161,7 @@ func (list *Linked[T]) RemoveFirst(data T) error {
 	return nil
 }
 
-func (list *Linked[T]) RemoveAll(data T) error {
+func (list *LkdList[T]) RemoveAll(data T) error {
 	index := list.IndexOf(data)
 	if index == -1 {
 		return errs.NotFound()
@@ -173,7 +173,7 @@ func (list *Linked[T]) RemoveAll(data T) error {
 	return nil
 }
 
-func (list *Linked[T]) RemoveAt(index int) (*T, error) {
+func (list *LkdList[T]) RemoveAt(index int) (*T, error) {
 	if list.Empty() {
 		return nil, errs.Empty()
 	}
@@ -183,10 +183,10 @@ func (list *Linked[T]) RemoveAt(index int) (*T, error) {
 	return &target.data, nil
 }
 
-func (list *Linked[T]) IndexOf(data T) int {
+func (list *LkdList[T]) IndexOf(data T) int {
 	index := 0
 	for node := list.head; node != nil; node = node.next {
-		if uni.Eq(node.data, data) {
+		if gx.Eq(node.data, data) {
 			return index
 		}
 		index++
@@ -194,10 +194,10 @@ func (list *Linked[T]) IndexOf(data T) int {
 	return -1
 }
 
-func (list *Linked[T]) LastIndexOf(data T) int {
+func (list *LkdList[T]) LastIndexOf(data T) int {
 	index := list.size - 1
 	for node := list.tail; node != nil; node = node.prev {
-		if uni.Eq(node.data, data) {
+		if gx.Eq(node.data, data) {
 			return index
 		}
 		index--
@@ -205,7 +205,7 @@ func (list *Linked[T]) LastIndexOf(data T) int {
 	return -1
 }
 
-func (list *Linked[T]) Get(index int) (*T, error) {
+func (list *LkdList[T]) Get(index int) (*T, error) {
 	if list.Empty() {
 		return nil, errs.Empty()
 	}
@@ -214,32 +214,32 @@ func (list *Linked[T]) Get(index int) (*T, error) {
 	return &list.getNode(index).data, nil
 }
 
-func (list *Linked[T]) Set(index int, data T) {
+func (list *LkdList[T]) Set(index int, data T) {
 	index = list.sanify(index)
 	list.getNode(index).data = data
 }
 
-func (list *Linked[T]) Slice(from, to int) colls.List[T] {
+func (list *LkdList[T]) Slice(from, to int) colls.List[T] {
 	list.sanify(from)
 	list.sanify(to)
 	if from > to {
 		from, to = to, from
 	}
 	if from == to {
-		return NewLinked[T]()
+		return Lkd[T]()
 	}
 	if from == 0 && to == list.size {
 		return list
 	}
-	sub := NewLinked[T]()
+	sub := Lkd[T]()
 	for i := from; i < to; i++ {
 		sub.Append(list.getNode(i).data)
 	}
 	return sub
 }
 
-func (list *Linked[T]) Sublist(filter types.Filter[T]) colls.List[T] {
-	sub := NewLinked[T]()
+func (list *LkdList[T]) Sublist(filter types.Filter[T]) colls.List[T] {
+	sub := Lkd[T]()
 	for node := list.head; node != nil; node = node.next {
 		if filter(node.data) {
 			sub.Append(node.data)
@@ -248,7 +248,7 @@ func (list *Linked[T]) Sublist(filter types.Filter[T]) colls.List[T] {
 	return sub
 }
 
-func (list *Linked[T]) Sort(comparator types.Comparator[T]) colls.List[T] {
+func (list *LkdList[T]) Sort(comparator types.Comparator[T]) colls.List[T] {
 	data := make([]T, list.size)
 	for node, i := list.head, 0; node != nil; node, i = node.next, i+1 {
 		data[i] = node.data
@@ -256,18 +256,18 @@ func (list *Linked[T]) Sort(comparator types.Comparator[T]) colls.List[T] {
 	sort.Slice(data, func(i, j int) bool {
 		return comparator(data[i], data[j]) < 0
 	})
-	return NewLinked(data...)
+	return Lkd(data...)
 }
 
 // --- Private Methods ---
-func (list *Linked[T]) sanify(index int) int {
+func (list *LkdList[T]) sanify(index int) int {
 	if index < 0 {
 		index += list.size
 	}
 	return index % list.size
 }
 
-func (list *Linked[T]) getNode(index int) *node[T] {
+func (list *LkdList[T]) getNode(index int) *node[T] {
 	if index < 0 || index >= list.size {
 		return nil
 	}
@@ -284,7 +284,7 @@ func (list *Linked[T]) getNode(index int) *node[T] {
 	return node
 }
 
-func (list *Linked[T]) remove(n *node[T]) {
+func (list *LkdList[T]) remove(n *node[T]) {
 	if n == nil {
 		log.Fatal("[Linked] attempted to remove a nil node")
 		return
@@ -311,16 +311,16 @@ func (list *Linked[T]) remove(n *node[T]) {
 }
 
 // --- Iterator ---
-type lklIterator[T any] struct {
-	list *Linked[T]
+type lklIter[T any] struct {
+	list *LkdList[T]
 	node *node[T]
 }
 
-func newLklIterator[T any](list *Linked[T]) *lklIterator[T] {
-	return &lklIterator[T]{list: list, node: list.head}
+func newLklIter[T any](list *LkdList[T]) *lklIter[T] {
+	return &lklIter[T]{list: list, node: list.head}
 }
 
-func (iter *lklIterator[T]) Next() (*T, bool) {
+func (iter *lklIter[T]) Next() (*T, bool) {
 	if iter.node == nil {
 		return nil, false
 	}
@@ -329,7 +329,7 @@ func (iter *lklIterator[T]) Next() (*T, bool) {
 	return &data, true
 }
 
-func (iter *lklIterator[T]) Each(f func(T)) {
+func (iter *lklIter[T]) Each(f func(T)) {
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		f(*data)
 	}
