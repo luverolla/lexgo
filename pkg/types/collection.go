@@ -2,11 +2,6 @@ package types
 
 import "fmt"
 
-type Base interface {
-	fmt.Stringer
-	Cmp(any) int
-}
-
 type Iterator[T any] interface {
 	Next() (*T, bool)
 	Each(func(T))
@@ -17,7 +12,8 @@ type Iterable[T any] interface {
 }
 
 type Collection[T any] interface {
-	Base
+	fmt.Stringer
+	Comparable
 	Iterable[T]
 	Size() int
 	Empty() bool

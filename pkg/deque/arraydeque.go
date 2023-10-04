@@ -5,21 +5,22 @@ import (
 
 	"github.com/luverolla/lexgo/pkg/errs"
 	"github.com/luverolla/lexgo/pkg/types"
+	"github.com/luverolla/lexgo/pkg/uni"
 )
 
-type ArrayDeque[T any] struct {
+type Array[T any] struct {
 	data []T
 	size int
 }
 
 // --- Constructor ---
-func NewArrayDeque[T any](data ...T) *ArrayDeque[T] {
-	return &ArrayDeque[T]{data, len(data)}
+func NewArray[T any](data ...T) *Array[T] {
+	return &Array[T]{data, len(data)}
 }
 
 // --- Methods from Collection[T] ---
-func (deque *ArrayDeque[T]) String() string {
-	s := "ArrayDeque["
+func (deque *Array[T]) String() string {
+	s := "Array["
 	for index, value := range deque.data {
 		if index != 0 {
 			s += ","
@@ -30,8 +31,8 @@ func (deque *ArrayDeque[T]) String() string {
 	return s
 }
 
-func (deque *ArrayDeque[T]) Cmp(other any) int {
-	otherDeque, ok := other.(*ArrayDeque[T])
+func (deque *Array[T]) Cmp(other any) int {
+	otherDeque, ok := other.(*Array[T])
 	if !ok {
 		return -1
 	}
@@ -39,7 +40,7 @@ func (deque *ArrayDeque[T]) Cmp(other any) int {
 		return deque.size - otherDeque.size
 	}
 	for index, value := range deque.data {
-		cmp := types.Cmp(value, otherDeque.data[index])
+		cmp := uni.Cmp(value, otherDeque.data[index])
 		if cmp != 0 {
 			return cmp
 		}
@@ -47,33 +48,33 @@ func (deque *ArrayDeque[T]) Cmp(other any) int {
 	return 0
 }
 
-func (deque *ArrayDeque[T]) Iter() types.Iterator[T] {
-	return newAdqIterator[T](deque)
+func (deque *Array[T]) Iter() types.Iterator[T] {
+	return deque.FIFOIter()
 }
 
-func (deque *ArrayDeque[T]) Size() int {
+func (deque *Array[T]) Size() int {
 	return deque.size
 }
 
-func (deque *ArrayDeque[T]) Empty() bool {
+func (deque *Array[T]) Empty() bool {
 	return deque.size == 0
 }
 
-func (deque *ArrayDeque[T]) Clear() {
+func (deque *Array[T]) Clear() {
 	deque.data = make([]T, 0)
 	deque.size = 0
 }
 
-func (deque *ArrayDeque[T]) Contains(val T) bool {
+func (deque *Array[T]) Contains(val T) bool {
 	for _, value := range deque.data {
-		if types.Cmp(value, val) == 0 {
+		if uni.Cmp(value, val) == 0 {
 			return true
 		}
 	}
 	return false
 }
 
-func (deque *ArrayDeque[T]) ContainsAll(c types.Collection[T]) bool {
+func (deque *Array[T]) ContainsAll(c types.Collection[T]) bool {
 	iter := c.Iter()
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		if !deque.Contains(*data) {
@@ -83,7 +84,7 @@ func (deque *ArrayDeque[T]) ContainsAll(c types.Collection[T]) bool {
 	return true
 }
 
-func (deque *ArrayDeque[T]) ContainsAny(c types.Collection[T]) bool {
+func (deque *Array[T]) ContainsAny(c types.Collection[T]) bool {
 	iter := c.Iter()
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		if deque.Contains(*data) {
@@ -94,17 +95,17 @@ func (deque *ArrayDeque[T]) ContainsAny(c types.Collection[T]) bool {
 }
 
 // --- Methods from Deque[T] ---
-func (deque *ArrayDeque[T]) PushFront(data ...T) {
+func (deque *Array[T]) PushFront(data ...T) {
 	deque.data = append(data, deque.data...)
 	deque.size += len(data)
 }
 
-func (deque *ArrayDeque[T]) PushBack(data ...T) {
+func (deque *Array[T]) PushBack(data ...T) {
 	deque.data = append(deque.data, data...)
 	deque.size += len(data)
 }
 
-func (deque *ArrayDeque[T]) PopFront() (*T, error) {
+func (deque *Array[T]) PopFront() (*T, error) {
 	if deque.size == 0 {
 		return nil, errs.Empty()
 	}
@@ -114,7 +115,7 @@ func (deque *ArrayDeque[T]) PopFront() (*T, error) {
 	return &val, nil
 }
 
-func (deque *ArrayDeque[T]) PopBack() (*T, error) {
+func (deque *Array[T]) PopBack() (*T, error) {
 	if deque.size == 0 {
 		return nil, errs.Empty()
 	}
@@ -124,36 +125,52 @@ func (deque *ArrayDeque[T]) PopBack() (*T, error) {
 	return &val, nil
 }
 
-func (deque *ArrayDeque[T]) Front() (*T, error) {
+func (deque *Array[T]) Front() (*T, error) {
 	if deque.size == 0 {
 		return nil, errs.Empty()
 	}
 	return &deque.data[0], nil
 }
 
-func (deque *ArrayDeque[T]) Back() (*T, error) {
+func (deque *Array[T]) Back() (*T, error) {
 	if deque.size == 0 {
 		return nil, errs.Empty()
 	}
 	return &deque.data[deque.size-1], nil
 }
 
-// --- Iterator ---
-type adqIterator[T any] struct {
-	deque *ArrayDeque[T]
-	index int
+func (deque *Array[T]) FIFOIter() types.Iterator[T] {
+	return newAdqIterator[T](deque, false)
 }
 
-func newAdqIterator[T any](deque *ArrayDeque[T]) *adqIterator[T] {
-	return &adqIterator[T]{deque, -1}
+func (deque *Array[T]) LIFOIter() types.Iterator[T] {
+	return newAdqIterator[T](deque, true)
+}
+
+// --- Iterator ---
+type adqIterator[T any] struct {
+	deque *Array[T]
+	lifo  bool
+}
+
+func newAdqIterator[T any](deque *Array[T], lifo bool) *adqIterator[T] {
+	return &adqIterator[T]{deque, lifo}
 }
 
 func (iter *adqIterator[T]) Next() (*T, bool) {
-	iter.index++
-	if iter.index >= iter.deque.size {
+	if iter.deque.size == 0 {
 		return nil, false
 	}
-	return &iter.deque.data[iter.index], true
+	var val T
+	if iter.lifo {
+		val = iter.deque.data[iter.deque.size-1]
+		iter.deque.data = iter.deque.data[:iter.deque.size-1]
+	} else {
+		val = iter.deque.data[0]
+		iter.deque.data = iter.deque.data[1:]
+	}
+	iter.deque.size--
+	return &val, true
 }
 
 func (iter *adqIterator[T]) Each(f func(T)) {

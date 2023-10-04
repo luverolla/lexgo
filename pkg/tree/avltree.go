@@ -1,39 +1,82 @@
 package tree
 
 import (
+	"fmt"
+	"log"
+
+	"github.com/luverolla/lexgo/pkg/colls"
 	"github.com/luverolla/lexgo/pkg/deque"
 	"github.com/luverolla/lexgo/pkg/types"
+	"github.com/luverolla/lexgo/pkg/uni"
 )
 
-type AVLTree[T any] struct {
+type AVL[T any] struct {
 	root *avlNode[T]
 	size int
 }
 
 // --- Constructor ---
-func NewAVLTree[T any]() *AVLTree[T] {
-	return &AVLTree[T]{nil, 0}
+func NewAVL[T any]() *AVL[T] {
+	return &AVL[T]{nil, 0}
 }
 
 // --- Methods from Collection[T] ---
-func (t *AVLTree[T]) Size() int {
+func (t *AVL[T]) String() string {
+	s := "AVL["
+	iter := t.Iter()
+	next, hasNext := iter.Next()
+	for hasNext {
+		s += fmt.Sprintf("%v", *next)
+		next, hasNext = iter.Next()
+		if hasNext {
+			s += ","
+		}
+	}
+	s += "]"
+	return s
+}
+
+func (t *AVL[T]) Cmp(other any) int {
+	otherTree, ok := other.(*AVL[T])
+	if !ok {
+		log.Fatal("ERROR: [tree.AVL] right hand side of comparison is not an AVL tree")
+	}
+	if t.size != otherTree.size {
+		return t.size - otherTree.size
+	}
+	iter := t.Iter()
+	otherIter := otherTree.Iter()
+	next, hasNext := iter.Next()
+	otherNext, hasOtherNext := otherIter.Next()
+	for hasNext && hasOtherNext {
+		cmp := uni.Cmp(*next, *otherNext)
+		if cmp != 0 {
+			return cmp
+		}
+		next, hasNext = iter.Next()
+		otherNext, hasOtherNext = otherIter.Next()
+	}
+	return 0
+}
+
+func (t *AVL[T]) Size() int {
 	return t.size
 }
 
-func (t *AVLTree[T]) Empty() bool {
+func (t *AVL[T]) Empty() bool {
 	return t.size == 0
 }
 
-func (t *AVLTree[T]) Clear() {
+func (t *AVL[T]) Clear() {
 	t.root = nil
 	t.size = 0
 }
 
-func (t *AVLTree[T]) Contains(val T) bool {
+func (t *AVL[T]) Contains(val T) bool {
 	return t.root.contains(val)
 }
 
-func (t *AVLTree[T]) ContainsAll(c types.Collection[T]) bool {
+func (t *AVL[T]) ContainsAll(c types.Collection[T]) bool {
 	iter := c.Iter()
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		if !t.Contains(*data) {
@@ -43,7 +86,7 @@ func (t *AVLTree[T]) ContainsAll(c types.Collection[T]) bool {
 	return true
 }
 
-func (t *AVLTree[T]) ContainsAny(c types.Collection[T]) bool {
+func (t *AVL[T]) ContainsAny(c types.Collection[T]) bool {
 	iter := c.Iter()
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		if t.Contains(*data) {
@@ -53,46 +96,63 @@ func (t *AVLTree[T]) ContainsAny(c types.Collection[T]) bool {
 	return false
 }
 
-func (t *AVLTree[T]) Iter() types.Iterator[T] {
+func (t *AVL[T]) Iter() types.Iterator[T] {
 	return t.InOrder()
 }
 
 // --- Methods from BSTree[T] ---
-func (t *AVLTree[T]) Insert(val T) {
+func (t *AVL[T]) Get(val T) colls.BSTreeNode[T] {
+	node := t.root.getNode(val)
+	if node == nil {
+		return nil
+	}
+	return node
+}
+
+func (t *AVL[T]) Root() colls.BSTreeNode[T] {
+	return t.root
+}
+
+func (t *AVL[T]) Insert(val T) colls.BSTreeNode[T] {
 	t.root = t.root.insert(val)
 	t.size++
+	return t.root
 }
 
-func (t *AVLTree[T]) Remove(val T) {
+func (t *AVL[T]) Remove(val T) colls.BSTreeNode[T] {
 	t.root = t.root.remove(val)
+	if t.root == nil {
+		return nil
+	}
 	t.size--
+	return t.root
 }
 
-func (t *AVLTree[T]) Min() T {
+func (t *AVL[T]) Min() colls.BSTreeNode[T] {
 	return t.root.min()
 }
 
-func (t *AVLTree[T]) Max() T {
+func (t *AVL[T]) Max() colls.BSTreeNode[T] {
 	return t.root.max()
 }
 
-func (t *AVLTree[T]) Pred(val T) T {
+func (t *AVL[T]) Pred(val T) colls.BSTreeNode[T] {
 	return t.root.pred(val)
 }
 
-func (t *AVLTree[T]) Succ(val T) T {
+func (t *AVL[T]) Succ(val T) colls.BSTreeNode[T] {
 	return t.root.succ(val)
 }
 
-func (t *AVLTree[T]) PreOrder() types.Iterator[T] {
+func (t *AVL[T]) PreOrder() types.Iterator[T] {
 	return newAVLPreOrderIterator(t)
 }
 
-func (t *AVLTree[T]) InOrder() types.Iterator[T] {
+func (t *AVL[T]) InOrder() types.Iterator[T] {
 	return newAVLInOrderIterator(t)
 }
 
-func (t *AVLTree[T]) PostOrder() types.Iterator[T] {
+func (t *AVL[T]) PostOrder() types.Iterator[T] {
 	return newAVLPostOrderIterator(t)
 }
 
@@ -103,14 +163,39 @@ type avlNode[T any] struct {
 	right *avlNode[T]
 }
 
+func (n *avlNode[T]) Value() T {
+	return n.val
+}
+
+func (n *avlNode[T]) Left() colls.BSTreeNode[T] {
+	return n.left
+}
+
+func (n *avlNode[T]) Right() colls.BSTreeNode[T] {
+	return n.right
+}
+
+func (n *avlNode[T]) getNode(val T) *avlNode[T] {
+	if n == nil {
+		return nil
+	}
+	switch {
+	case uni.Cmp(val, n.val) < 0:
+		return n.left.getNode(val)
+	case uni.Cmp(val, n.val) > 0:
+		return n.right.getNode(val)
+	}
+	return n
+}
+
 func (n *avlNode[T]) insert(val T) *avlNode[T] {
 	if n == nil {
 		return &avlNode[T]{val, nil, nil}
 	}
 	switch {
-	case types.Cmp(val, n.val) < 0:
+	case uni.Cmp(val, n.val) < 0:
 		n.left = n.left.insert(val)
-	case types.Cmp(val, n.val) > 0:
+	case uni.Cmp(val, n.val) > 0:
 		n.right = n.right.insert(val)
 	}
 	return n.rebalance()
@@ -121,9 +206,9 @@ func (n *avlNode[T]) remove(val T) *avlNode[T] {
 		return nil
 	}
 	switch {
-	case types.Cmp(val, n.val) < 0:
+	case uni.Cmp(val, n.val) < 0:
 		n.left = n.left.remove(val)
-	case types.Cmp(val, n.val) > 0:
+	case uni.Cmp(val, n.val) > 0:
 		n.right = n.right.remove(val)
 	default:
 		if n.left == nil {
@@ -132,61 +217,62 @@ func (n *avlNode[T]) remove(val T) *avlNode[T] {
 		if n.right == nil {
 			return n.left
 		}
-		n.val = n.right.min()
+		n.val = n.right.min().val
 		n.right = n.right.remove(n.val)
 	}
 	return n.rebalance()
 }
 
 func (n *avlNode[T]) contains(val T) bool {
-	if n == nil {
-		return false
-	}
-	switch {
-	case types.Cmp(val, n.val) < 0:
-		return n.left.contains(val)
-	case types.Cmp(val, n.val) > 0:
-		return n.right.contains(val)
-	}
-	return true
+	return n.getNode(val) != nil
 }
 
-func (n *avlNode[T]) min() T {
+func (n *avlNode[T]) min() *avlNode[T] {
 	if n.left == nil {
-		return n.val
+		return n
 	}
 	return n.left.min()
 }
 
-func (n *avlNode[T]) max() T {
+func (n *avlNode[T]) max() *avlNode[T] {
 	if n.right == nil {
-		return n.val
+		return n
 	}
 	return n.right.max()
 }
 
-func (n *avlNode[T]) pred(val T) T {
+func (n *avlNode[T]) pred(val T) *avlNode[T] {
 	if n == nil {
-		return val
+		return nil
 	}
 	switch {
-	case types.Cmp(val, n.val) <= 0:
+	case uni.Cmp(val, n.val) < 0:
 		return n.left.pred(val)
-	default:
+	case uni.Cmp(val, n.val) > 0:
 		return n.right.pred(val)
+	default:
+		if n.left != nil {
+			return n.left.max()
+		}
 	}
+	return n
 }
 
-func (n *avlNode[T]) succ(val T) T {
+func (n *avlNode[T]) succ(val T) *avlNode[T] {
 	if n == nil {
-		return val
+		return nil
 	}
 	switch {
-	case types.Cmp(val, n.val) < 0:
+	case uni.Cmp(val, n.val) < 0:
 		return n.left.succ(val)
-	default:
+	case uni.Cmp(val, n.val) > 0:
 		return n.right.succ(val)
+	default:
+		if n.right != nil {
+			return n.right.min()
+		}
 	}
+	return n
 }
 
 func (n *avlNode[T]) height() int {
@@ -236,12 +322,12 @@ func (n *avlNode[T]) rebalance() *avlNode[T] {
 
 // --- Iterators ---
 type avlPreOrderIterator[T any] struct {
-	tree  *AVLTree[T]
-	stack deque.Deque[avlNode[T]]
+	tree  *AVL[T]
+	stack colls.Deque[avlNode[T]]
 }
 
-func newAVLPreOrderIterator[T any](tree *AVLTree[T]) *avlPreOrderIterator[T] {
-	iter := &avlPreOrderIterator[T]{tree, deque.New[avlNode[T]](deque.ADQ)}
+func newAVLPreOrderIterator[T any](tree *AVL[T]) *avlPreOrderIterator[T] {
+	iter := &avlPreOrderIterator[T]{tree, deque.NewArray[avlNode[T]]()}
 	if tree.root != nil {
 		iter.stack.PushFront(*tree.root)
 	}
@@ -269,12 +355,12 @@ func (iter *avlPreOrderIterator[T]) Each(f func(T)) {
 }
 
 type avlInOrderIterator[T any] struct {
-	tree  *AVLTree[T]
-	stack deque.Deque[avlNode[T]]
+	tree  *AVL[T]
+	stack colls.Deque[avlNode[T]]
 }
 
-func newAVLInOrderIterator[T any](tree *AVLTree[T]) *avlInOrderIterator[T] {
-	iter := &avlInOrderIterator[T]{tree, deque.New[avlNode[T]](deque.ADQ)}
+func newAVLInOrderIterator[T any](tree *AVL[T]) *avlInOrderIterator[T] {
+	iter := &avlInOrderIterator[T]{tree, deque.NewArray[avlNode[T]]()}
 	node := tree.root
 	for node != nil {
 		iter.stack.PushFront(*node)
@@ -301,12 +387,12 @@ func (iter *avlInOrderIterator[T]) Each(f func(T)) {
 }
 
 type avlPostOrderIterator[T any] struct {
-	tree  *AVLTree[T]
-	stack deque.Deque[avlNode[T]]
+	tree  *AVL[T]
+	stack colls.Deque[avlNode[T]]
 }
 
-func newAVLPostOrderIterator[T any](tree *AVLTree[T]) *avlPostOrderIterator[T] {
-	iter := &avlPostOrderIterator[T]{tree, deque.New[avlNode[T]](deque.ADQ)}
+func newAVLPostOrderIterator[T any](tree *AVL[T]) *avlPostOrderIterator[T] {
+	iter := &avlPostOrderIterator[T]{tree, deque.NewArray[avlNode[T]]()}
 	node := tree.root
 	for node != nil {
 		iter.stack.PushFront(*node)
