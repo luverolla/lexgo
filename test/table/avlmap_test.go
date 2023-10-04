@@ -9,7 +9,6 @@ import (
 var tm_keys = []string{"ciao", "becco", "hey!", "castoro"}
 var tm_vals = []bool{true, false, true, false}
 
-/*
 func TestAVLMapAdd(t *testing.T) {
 	tm := table.NewAVLTreeMap[string, bool]()
 
@@ -55,7 +54,6 @@ func TestAVLMapGet(t *testing.T) {
 		}
 	}
 }
-*/
 
 func TestAVLMapRemove(t *testing.T) {
 	tm_copy := table.NewAVLTreeMap[string, bool]()
