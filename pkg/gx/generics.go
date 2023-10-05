@@ -12,10 +12,16 @@ import (
 	"github.com/luverolla/lexgo/pkg/types"
 )
 
+// Checks for equality between two values of generic type
+//
+// See [Cmp]
 func Eq(a, b any) bool {
 	return Cmp(a, b) == 0
 }
 
+// Get maximum value from a list of values of generic type
+//
+// See [Cmp]
 func Max(vals ...any) any {
 	if len(vals) == 0 {
 		log.Printf("WARNING: [unified.Max] No values given\r\n")
@@ -30,6 +36,9 @@ func Max(vals ...any) any {
 	return max
 }
 
+// Get minimum value from a list of values of generic type
+//
+// See [Cmp]
 func Min(vals ...any) any {
 	if len(vals) == 0 {
 		log.Printf("WARNING: [unified.Min] No values given\r\n")
@@ -44,6 +53,18 @@ func Min(vals ...any) any {
 	return min
 }
 
+// Tries to compare two values of generic type
+// Given a and b the two values (in this order), it returns:
+//
+//	-1 if a < b
+//	 0 if a == b
+//	 1 if a > b
+//
+// It accepts all types under the [constraints.Ordered] interface
+// or types that implement the [types.Comparable] interface
+// For the latter, the function [types.Comparable.Cmp] must be implemented
+//
+// If the types of a and b are not comparable, it will panic
 func Cmp(a, b any) int {
 	switch a.(type) {
 	case int:
@@ -108,6 +129,12 @@ func Cmp(a, b any) int {
 	}
 }
 
+// Hashes a value of generic type
+// It accepts all numeric and string types
+// It also accepts types that implement the [types.Hashable] interface
+// For the latter, the function [types.Hashable.Hash] must be implemented
+//
+// If the type of given value is not hashable, it will panic
 func Hash(v any) uint32 {
 	switch val := v.(type) {
 	case int, int8, int16, int32, int64:

@@ -168,7 +168,18 @@ func (list *ArrList[T]) LastIndexOf(data T) int {
 }
 
 func (list *ArrList[T]) Slice(start, end int) colls.List[T] {
-	return Arr(list.data[start:end]...)
+	if start >= end || start == end {
+		return Arr[T]()
+	}
+
+	var actStart = list.sanify(start)
+	var actEnd = list.sanify(end)
+
+	if actStart > actEnd {
+		actStart, actEnd = actEnd, actStart
+	}
+
+	return Arr(list.data[actStart:actEnd]...)
 }
 
 func (list *ArrList[T]) Sort(comparator types.Comparator[T]) colls.List[T] {

@@ -219,20 +219,19 @@ func (list *LkdList[T]) Set(index int, data T) {
 	list.getNode(index).data = data
 }
 
-func (list *LkdList[T]) Slice(from, to int) colls.List[T] {
-	list.sanify(from)
-	list.sanify(to)
-	if from > to {
-		from, to = to, from
-	}
-	if from == to {
+func (list *LkdList[T]) Slice(start, end int) colls.List[T] {
+	if list.Empty() || start == end {
 		return Lkd[T]()
 	}
-	if from == 0 && to == list.size {
-		return list
+	var actStart = list.sanify(start)
+	var actEnd = list.sanify(end)
+
+	if actStart > actEnd {
+		actStart, actEnd = actEnd, actStart
 	}
+
 	sub := Lkd[T]()
-	for i := from; i < to; i++ {
+	for i := actStart; i < actEnd; i++ {
 		sub.Append(list.getNode(i).data)
 	}
 	return sub

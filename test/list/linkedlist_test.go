@@ -5,6 +5,7 @@ import (
 
 	"github.com/luverolla/lexgo/pkg/colls"
 	"github.com/luverolla/lexgo/pkg/list"
+	"github.com/luverolla/lexgo/pkg/types"
 )
 
 var data_int = []int{4, 7, 9, 2547347383, 50, 78, 9, 77, 32, 9}
@@ -208,5 +209,91 @@ func TestLinkedListContainsAny(t *testing.T) {
 
 	if !lkl_str_copy.ContainsAny(sub_str) {
 		t.Errorf("LinkedList[string] ContainsAny(LinkedList[string]) is false, expected true")
+	}
+}
+
+func TestLinkedListSlice(t *testing.T) {
+	arl_int_copy := list.Lkd[int](data_int_2...)
+	arl_str_copy := list.Lkd[string](data_str_2...)
+
+	start := 2
+	end := 6
+
+	sub_int := arl_int_copy.Slice(start, end)
+	sub_str := arl_str_copy.Slice(start, end)
+
+	if sub_int.Size() != end-start {
+		t.Errorf("LinkedList[int] Slice(%d, %d) size is %d, expected %d", start, end, sub_int.Size(), end-start)
+	}
+
+	if sub_str.Size() != end-start {
+		t.Errorf("LinkedList[string] Slice(%d, %d) size is %d, expected %d", start, end, sub_str.Size(), end-start)
+	}
+
+	for i := start; i < end; i++ {
+		val, _ := sub_int.Get(i - start)
+		if *val != data_int_2[i] {
+			t.Errorf("LinkedList[int] Slice(%d, %d) Get(%d) is %d, expected %d", start, end, i-start, *val, data_int_2[i])
+		}
+	}
+
+	for i := start; i < end; i++ {
+		val, _ := sub_str.Get(i - start)
+		if *val != data_str_2[i] {
+			t.Errorf("LinkedList[string] Slice(%d, %d) Get(%d) is %s, expected %s", start, end, i-start, *val, data_str_2[i])
+		}
+	}
+}
+
+func TestLinkedListSublist(t *testing.T) {
+	arl_int_copy := list.Lkd[int](data_int_2...)
+	arl_str_copy := list.Lkd[string](data_str_2...)
+
+	var evenIntFilter types.Filter[int] = func(v int, args ...any) bool {
+		return v%2 == 0
+	}
+
+	var emptyStrFilter types.Filter[string] = func(s string, args ...any) bool {
+		return s == ""
+	}
+
+	valuesInt := make([]int, 0)
+	valuesStr := make([]string, 0)
+
+	for _, v := range data_int_2 {
+		if evenIntFilter(v) {
+			valuesInt = append(valuesInt, v)
+		}
+	}
+
+	for _, v := range data_str_2 {
+		if emptyStrFilter(v) {
+			valuesStr = append(valuesStr, v)
+		}
+	}
+
+	sub_int := arl_int_copy.Sublist(evenIntFilter)
+	sub_str := arl_str_copy.Sublist(emptyStrFilter)
+
+	if sub_int.Size() != len(valuesInt) {
+		t.Errorf("LinkedList[int] Sublist() size is %d, expected %d", sub_int.Size(), len(valuesInt))
+	}
+
+	if sub_str.Size() != len(valuesStr) {
+		t.Errorf("LinkedList[string] Sublist() size is %d, expected %d", sub_str.Size(), len(valuesStr))
+	}
+
+	for i, v := range valuesInt {
+		val, _ := sub_int.Get(i)
+		if *val != v {
+			t.Errorf("LinkedList[int] Sublist() Get(%d) is %d, expected %d", i, *val, v)
+		}
+	}
+
+	for i, v := range valuesStr {
+		val, _ := sub_str.Get(i)
+		if *val != v {
+			t.Errorf("LinkedList[string] Sublist() Get(%d) is %s, expected %s", i, *val, v)
+		}
 	}
 }
