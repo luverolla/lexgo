@@ -2,9 +2,10 @@ package deque
 
 import (
 	"github.com/luverolla/lexgo/pkg/list"
-	"github.com/luverolla/lexgo/pkg/types"
+	"github.com/luverolla/lexgo/pkg/tau"
 )
 
+// Implementation of a double-ended queue with a linked list through embedding
 type LkDeque[T any] struct {
 	inner *list.LkdList[T]
 }
@@ -23,7 +24,7 @@ func (deque *LkDeque[T]) Cmp(other any) int {
 	return deque.inner.Cmp(other)
 }
 
-func (deque *LkDeque[T]) Iter() types.Iterator[T] {
+func (deque *LkDeque[T]) Iter() tau.Iterator[T] {
 	return deque.inner.Iter()
 }
 
@@ -43,12 +44,16 @@ func (deque *LkDeque[T]) Contains(val T) bool {
 	return deque.inner.Contains(val)
 }
 
-func (deque *LkDeque[T]) ContainsAll(c types.Collection[T]) bool {
+func (deque *LkDeque[T]) ContainsAll(c tau.Collection[T]) bool {
 	return deque.inner.ContainsAll(c)
 }
 
-func (deque *LkDeque[T]) ContainsAny(c types.Collection[T]) bool {
+func (deque *LkDeque[T]) ContainsAny(c tau.Collection[T]) bool {
 	return deque.inner.ContainsAny(c)
+}
+
+func (deque *LkDeque[T]) Clone() tau.Collection[T] {
+	return LkDeque[T]{deque.inner.Clone().(*list.LkdList[T])}
 }
 
 // --- Methods from Deque[T] ---
@@ -76,11 +81,11 @@ func (deque *LkDeque[T]) Back() (*T, error) {
 	return deque.inner.Get(deque.Size() - 1)
 }
 
-func (deque *LkDeque[T]) FIFOIter() types.Iterator[T] {
+func (deque *LkDeque[T]) FIFOIter() tau.Iterator[T] {
 	return newLdqIter[T](deque, false)
 }
 
-func (deque *LkDeque[T]) LIFOIter() types.Iterator[T] {
+func (deque *LkDeque[T]) LIFOIter() tau.Iterator[T] {
 	return newLdqIter[T](deque, true)
 }
 

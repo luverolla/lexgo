@@ -5,7 +5,7 @@ import (
 
 	"github.com/luverolla/lexgo/pkg/colls"
 	"github.com/luverolla/lexgo/pkg/list"
-	"github.com/luverolla/lexgo/pkg/types"
+	"github.com/luverolla/lexgo/pkg/tau"
 )
 
 var data_int_2 = []int{4, 7, 9, 2547347383, 50, 78, 9, 77, 32, 9}
@@ -249,11 +249,11 @@ func TestArrayListSublist(t *testing.T) {
 	arl_int_copy := list.Arr[int](data_int_2...)
 	arl_str_copy := list.Arr[string](data_str_2...)
 
-	var evenIntFilter types.Filter[int] = func(v int, args ...any) bool {
+	var evenIntFilter tau.Filter[int] = func(v int, args ...any) bool {
 		return v%2 == 0
 	}
 
-	var emptyStrFilter types.Filter[string] = func(s string, args ...any) bool {
+	var emptyStrFilter tau.Filter[string] = func(s string, args ...any) bool {
 		return s == ""
 	}
 

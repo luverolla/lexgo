@@ -1,3 +1,4 @@
+// This package contains implementation for the interface [colls.List]
 package list
 
 import (
@@ -6,15 +7,15 @@ import (
 
 	"github.com/luverolla/lexgo/pkg/colls"
 	"github.com/luverolla/lexgo/pkg/errs"
-	"github.com/luverolla/lexgo/pkg/gx"
-	"github.com/luverolla/lexgo/pkg/types"
+	"github.com/luverolla/lexgo/pkg/tau"
 )
 
+// List implemented with a dynamic array
 type ArrList[T any] struct {
 	data []T
 }
 
-// --- Constructors ---
+// Creates a new list implemented with a dynamic array
 func Arr[T any](data ...T) *ArrList[T] {
 	list := new(ArrList[T])
 	list.data = make([]T, len(data))
@@ -44,7 +45,7 @@ func (list *ArrList[T]) Cmp(other any) int {
 		return len(list.data) - len(otherList.data)
 	}
 	for index, value := range list.data {
-		cmp := gx.Cmp(value, otherList.data[index])
+		cmp := tau.Cmp(value, otherList.data[index])
 		if cmp != 0 {
 			return cmp
 		}
@@ -52,7 +53,7 @@ func (list *ArrList[T]) Cmp(other any) int {
 	return 0
 }
 
-func (list *ArrList[T]) Iter() types.Iterator[T] {
+func (list *ArrList[T]) Iter() tau.Iterator[T] {
 	return newArlIter[T](list)
 }
 
@@ -72,7 +73,7 @@ func (list *ArrList[T]) Contains(data T) bool {
 	return list.IndexOf(data) != -1
 }
 
-func (list *ArrList[T]) ContainsAll(other types.Collection[T]) bool {
+func (list *ArrList[T]) ContainsAll(other tau.Collection[T]) bool {
 	iter := other.Iter()
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		if !list.Contains(*data) {
@@ -82,7 +83,7 @@ func (list *ArrList[T]) ContainsAll(other types.Collection[T]) bool {
 	return true
 }
 
-func (list *ArrList[T]) ContainsAny(other types.Collection[T]) bool {
+func (list *ArrList[T]) ContainsAny(other tau.Collection[T]) bool {
 	iter := other.Iter()
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		if list.Contains(*data) {
@@ -92,7 +93,11 @@ func (list *ArrList[T]) ContainsAny(other types.Collection[T]) bool {
 	return false
 }
 
-// --- Methods from List[T] ---
+func (list *ArrList[T]) Clone() tau.Collection[T] {
+	return Arr(list.data...)
+}
+
+// --- Methods from IdxedCollection[T] ---
 func (list *ArrList[T]) Get(index int) (*T, error) {
 	if list.Empty() {
 		return nil, errs.Empty()
@@ -106,16 +111,71 @@ func (list *ArrList[T]) Set(index int, data T) {
 	list.data[index] = data
 }
 
+func (list *ArrList[T]) Insert(index int, data T) {
+	list.data = append(list.data[:index], append([]T{data}, list.data[index:]...)...)
+}
+
+func (list *ArrList[T]) RemoveAt(index int) (*T, error) {
+	if list.Empty() {
+		return nil, errs.Empty()
+	}
+	index = list.sanify(index)
+	data := list.data[index]
+	list.data = append(list.data[:index], list.data[index+1:]...)
+	return &data, nil
+}
+
+func (list *ArrList[T]) IndexOf(data T) int {
+	for index, value := range list.data {
+		if tau.Eq(value, data) {
+			return index
+		}
+	}
+	return -1
+}
+
+func (list *ArrList[T]) LastIndexOf(data T) int {
+	for index := len(list.data) - 1; index >= 0; index-- {
+		if tau.Eq(list.data[index], data) {
+			return index
+		}
+	}
+	return -1
+}
+
+func (list *ArrList[T]) Swap(i, j int) {
+	i = list.sanify(i)
+	j = list.sanify(j)
+
+	if i == j {
+		return
+	}
+
+	list.data[i], list.data[j] = list.data[j], list.data[i]
+}
+
+func (list *ArrList[T]) Slice(start, end int) tau.IdxedCollection[T] {
+	if start >= end || start == end {
+		return Arr[T]()
+	}
+
+	var actStart = list.sanify(start)
+	var actEnd = list.sanify(end)
+
+	if actStart > actEnd {
+		actStart, actEnd = actEnd, actStart
+	}
+
+	return Arr(list.data[actStart:actEnd]...)
+}
+
+// --- Methods from List[T] ---
 func (list *ArrList[T]) Append(data ...T) {
 	list.data = append(list.data, data...)
 }
 
 func (list *ArrList[T]) Prepend(data ...T) {
 	list.data = append(data, list.data...)
-}
-
-func (list *ArrList[T]) Insert(index int, data T) {
-	list.data = append(list.data[:index], append([]T{data}, list.data[index:]...)...)
 }
 
 func (list *ArrList[T]) RemoveFirst(data T) error {
@@ -139,50 +199,7 @@ func (list *ArrList[T]) RemoveAll(data T) error {
 	return nil
 }
 
-func (list *ArrList[T]) RemoveAt(index int) (*T, error) {
-	if list.Empty() {
-		return nil, errs.Empty()
-	}
-	index = list.sanify(index)
-	data := list.data[index]
-	list.data = append(list.data[:index], list.data[index+1:]...)
-	return &data, nil
-}
-
-func (list *ArrList[T]) IndexOf(data T) int {
-	for index, value := range list.data {
-		if gx.Eq(value, data) {
-			return index
-		}
-	}
-	return -1
-}
-
-func (list *ArrList[T]) LastIndexOf(data T) int {
-	for index := len(list.data) - 1; index >= 0; index-- {
-		if gx.Eq(list.data[index], data) {
-			return index
-		}
-	}
-	return -1
-}
-
-func (list *ArrList[T]) Slice(start, end int) colls.List[T] {
-	if start >= end || start == end {
-		return Arr[T]()
-	}
-
-	var actStart = list.sanify(start)
-	var actEnd = list.sanify(end)
-
-	if actStart > actEnd {
-		actStart, actEnd = actEnd, actStart
-	}
-
-	return Arr(list.data[actStart:actEnd]...)
-}
-
-func (list *ArrList[T]) Sort(comparator types.Comparator[T]) colls.List[T] {
+func (list *ArrList[T]) Sort(comparator tau.Comparator[T]) colls.List[T] {
 	data := make([]T, len(list.data))
 	copy(data, list.data)
 	sort.Slice(data, func(i, j int) bool {
@@ -192,7 +209,7 @@ func (list *ArrList[T]) Sort(comparator types.Comparator[T]) colls.List[T] {
 }
 
 // create a new list with the data that satisfies the filter function
-func (list *ArrList[T]) Sublist(filter types.Filter[T]) colls.List[T] {
+func (list *ArrList[T]) Sublist(filter tau.Filter[T]) colls.List[T] {
 	data := make([]T, 0)
 	for _, value := range list.data {
 		if filter(value) {

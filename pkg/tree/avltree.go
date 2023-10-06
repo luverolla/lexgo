@@ -1,3 +1,4 @@
+// This package contains implementation for the interface [colls.BSTree]
 package tree
 
 import (
@@ -6,22 +7,22 @@ import (
 
 	"github.com/luverolla/lexgo/pkg/colls"
 	"github.com/luverolla/lexgo/pkg/deque"
-	"github.com/luverolla/lexgo/pkg/gx"
-	"github.com/luverolla/lexgo/pkg/types"
+	"github.com/luverolla/lexgo/pkg/tau"
 )
 
+// Binary search tree implemented with an AVL tree
 type AVLTree[T any] struct {
 	root *avlNode[T]
-	cmp  types.Comparator[T]
+	cmp  tau.Comparator[T]
 	size int
 }
 
-// --- Constructors ---
+// Creates a new binary search tree implemented with an AVL tree
 func AVL[T any]() *AVLTree[T] {
 	return &AVLTree[T]{nil, nil, 0}
 }
 
-func AVLCmp[T any](cmp types.Comparator[T]) *AVLTree[T] {
+func AVLCmp[T any](cmp tau.Comparator[T]) *AVLTree[T] {
 	return &AVLTree[T]{nil, cmp, 0}
 }
 
@@ -81,7 +82,7 @@ func (t *AVLTree[T]) Contains(val T) bool {
 	return t.contains(t.root, val)
 }
 
-func (t *AVLTree[T]) ContainsAll(c types.Collection[T]) bool {
+func (t *AVLTree[T]) ContainsAll(c tau.Collection[T]) bool {
 	iter := c.Iter()
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		if !t.Contains(*data) {
@@ -91,7 +92,7 @@ func (t *AVLTree[T]) ContainsAll(c types.Collection[T]) bool {
 	return true
 }
 
-func (t *AVLTree[T]) ContainsAny(c types.Collection[T]) bool {
+func (t *AVLTree[T]) ContainsAny(c tau.Collection[T]) bool {
 	iter := c.Iter()
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		if t.Contains(*data) {
@@ -101,7 +102,7 @@ func (t *AVLTree[T]) ContainsAny(c types.Collection[T]) bool {
 	return false
 }
 
-func (t *AVLTree[T]) Iter() types.Iterator[T] {
+func (t *AVLTree[T]) Iter() tau.Iterator[T] {
 	return t.InOrder()
 }
 
@@ -149,22 +150,22 @@ func (t *AVLTree[T]) Succ(val T) colls.BSTreeNode[T] {
 	return t.succ(t.root, val)
 }
 
-func (t *AVLTree[T]) PreOrder() types.Iterator[T] {
+func (t *AVLTree[T]) PreOrder() tau.Iterator[T] {
 	return newAVLPreOrderIter(t)
 }
 
-func (t *AVLTree[T]) InOrder() types.Iterator[T] {
+func (t *AVLTree[T]) InOrder() tau.Iterator[T] {
 	return newAVLInOrderIter(t)
 }
 
-func (t *AVLTree[T]) PostOrder() types.Iterator[T] {
+func (t *AVLTree[T]) PostOrder() tau.Iterator[T] {
 	return newAVLPostOrderIter(t)
 }
 
 // --- Private Methods ---
 func (t *AVLTree[T]) compare(a, b T) int {
 	if t.cmp == nil {
-		return gx.Cmp(a, b)
+		return tau.Cmp(a, b)
 	}
 	return t.cmp(a, b)
 }

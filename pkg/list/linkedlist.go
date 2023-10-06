@@ -7,17 +7,17 @@ import (
 
 	"github.com/luverolla/lexgo/pkg/colls"
 	"github.com/luverolla/lexgo/pkg/errs"
-	"github.com/luverolla/lexgo/pkg/gx"
-	"github.com/luverolla/lexgo/pkg/types"
+	"github.com/luverolla/lexgo/pkg/tau"
 )
 
+// List implemented with a doubly linked list
 type LkdList[T any] struct {
 	head *node[T]
 	tail *node[T]
 	size int
 }
 
-// --- Constructors ---
+// Creates a new list implemented with a doubly linked list
 func Lkd[T any](data ...T) *LkdList[T] {
 	list := new(LkdList[T])
 	list.Append(data...)
@@ -53,7 +53,7 @@ func (list *LkdList[T]) Cmp(other any) int {
 	next, hasNext := iter.Next()
 	otherNext, hasOtherNext := otherIter.Next()
 	for hasNext && hasOtherNext {
-		cmp := gx.Cmp(*next, *otherNext)
+		cmp := tau.Cmp(*next, *otherNext)
 		if cmp != 0 {
 			return cmp
 		}
@@ -63,7 +63,7 @@ func (list *LkdList[T]) Cmp(other any) int {
 	return 0
 }
 
-func (list *LkdList[T]) Iter() types.Iterator[T] {
+func (list *LkdList[T]) Iter() tau.Iterator[T] {
 	return newLklIter[T](list)
 }
 
@@ -85,7 +85,7 @@ func (list *LkdList[T]) Contains(data T) bool {
 	return list.IndexOf(data) != -1
 }
 
-func (list *LkdList[T]) ContainsAll(other types.Collection[T]) bool {
+func (list *LkdList[T]) ContainsAll(other tau.Collection[T]) bool {
 	iter := other.Iter()
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		if !list.Contains(*data) {
@@ -95,7 +95,7 @@ func (list *LkdList[T]) ContainsAll(other types.Collection[T]) bool {
 	return true
 }
 
-func (list *LkdList[T]) ContainsAny(other types.Collection[T]) bool {
+func (list *LkdList[T]) ContainsAny(other tau.Collection[T]) bool {
 	iter := other.Iter()
 	for data, ok := iter.Next(); ok; data, ok = iter.Next() {
 		if list.Contains(*data) {
@@ -103,6 +103,104 @@ func (list *LkdList[T]) ContainsAny(other types.Collection[T]) bool {
 		}
 	}
 	return false
+}
+
+func (list *LkdList[T]) Clone() tau.Collection[T] {
+	return list.Slice(0, list.size)
+}
+
+// --- Methods from IdxedCollection[T] ---
+func (list *LkdList[T]) Get(index int) (*T, error) {
+	if list.Empty() {
+		return nil, errs.Empty()
+	}
+
+	index = list.sanify(index)
+	return &list.getNode(index).data, nil
+}
+
+func (list *LkdList[T]) Set(index int, data T) {
+	index = list.sanify(index)
+	list.getNode(index).data = data
+}
+
+func (list *LkdList[T]) Insert(index int, data T) {
+	index = index % list.size
+	if index < 0 {
+		index += list.size
+	}
+	if index == 0 {
+		list.Prepend(data)
+	} else if index == list.size {
+		list.Append(data)
+	} else {
+		tgt := list.getNode(index)
+		newNode := &node[T]{data: data}
+		tgt.prev.append(newNode)
+		newNode.append(tgt)
+	}
+	list.size++
+}
+
+func (list *LkdList[T]) RemoveAt(index int) (*T, error) {
+	if list.Empty() {
+		return nil, errs.Empty()
+	}
+	index = list.sanify(index)
+	target := list.getNode(index)
+	list.remove(target)
+	return &target.data, nil
+}
+
+func (list *LkdList[T]) IndexOf(data T) int {
+	index := 0
+	for node := list.head; node != nil; node = node.next {
+		if tau.Eq(node.data, data) {
+			return index
+		}
+		index++
+	}
+	return -1
+}
+
+func (list *LkdList[T]) LastIndexOf(data T) int {
+	index := list.size - 1
+	for node := list.tail; node != nil; node = node.prev {
+		if tau.Eq(node.data, data) {
+			return index
+		}
+		index--
+	}
+	return -1
+}
+
+func (list *LkdList[T]) Swap(i, j int) {
+	i = list.sanify(i)
+	j = list.sanify(j)
+	if i == j {
+		return
+	}
+	nodeI := list.getNode(i)
+	nodeJ := list.getNode(j)
+	nodeI.data, nodeJ.data = nodeJ.data, nodeI.data
+}
+
+func (list *LkdList[T]) Slice(start, end int) tau.IdxedCollection[T] {
+	if list.Empty() || start == end {
+		return Lkd[T]()
+	}
+	var actStart = list.sanify(start)
+	var actEnd = list.sanify(end)
+
+	if actStart > actEnd {
+		actStart, actEnd = actEnd, actStart
+	}
+
+	sub := Lkd[T]()
+	for i := actStart; i < actEnd; i++ {
+		sub.Append(list.getNode(i).data)
+	}
+	return sub
 }
 
 // --- Methods from List[T] ---
@@ -134,24 +232,6 @@ func (list *LkdList[T]) Prepend(data ...T) {
 	list.size += len(data)
 }
 
-func (list *LkdList[T]) Insert(index int, data T) {
-	index = index % list.size
-	if index < 0 {
-		index += list.size
-	}
-	if index == 0 {
-		list.Prepend(data)
-	} else if index == list.size {
-		list.Append(data)
-	} else {
-		tgt := list.getNode(index)
-		newNode := &node[T]{data: data}
-		tgt.prev.append(newNode)
-		newNode.append(tgt)
-	}
-	list.size++
-}
-
 func (list *LkdList[T]) RemoveFirst(data T) error {
 	index := list.IndexOf(data)
 	if index == -1 {
@@ -173,71 +253,7 @@ func (list *LkdList[T]) RemoveAll(data T) error {
 	return nil
 }
 
-func (list *LkdList[T]) RemoveAt(index int) (*T, error) {
-	if list.Empty() {
-		return nil, errs.Empty()
-	}
-	index = list.sanify(index)
-	target := list.getNode(index)
-	list.remove(target)
-	return &target.data, nil
-}
-
-func (list *LkdList[T]) IndexOf(data T) int {
-	index := 0
-	for node := list.head; node != nil; node = node.next {
-		if gx.Eq(node.data, data) {
-			return index
-		}
-		index++
-	}
-	return -1
-}
-
-func (list *LkdList[T]) LastIndexOf(data T) int {
-	index := list.size - 1
-	for node := list.tail; node != nil; node = node.prev {
-		if gx.Eq(node.data, data) {
-			return index
-		}
-		index--
-	}
-	return -1
-}
-
-func (list *LkdList[T]) Get(index int) (*T, error) {
-	if list.Empty() {
-		return nil, errs.Empty()
-	}
-
-	index = list.sanify(index)
-	return &list.getNode(index).data, nil
-}
-
-func (list *LkdList[T]) Set(index int, data T) {
-	index = list.sanify(index)
-	list.getNode(index).data = data
-}
-
-func (list *LkdList[T]) Slice(start, end int) colls.List[T] {
-	if list.Empty() || start == end {
-		return Lkd[T]()
-	}
-	var actStart = list.sanify(start)
-	var actEnd = list.sanify(end)
-
-	if actStart > actEnd {
-		actStart, actEnd = actEnd, actStart
-	}
-
-	sub := Lkd[T]()
-	for i := actStart; i < actEnd; i++ {
-		sub.Append(list.getNode(i).data)
-	}
-	return sub
-}
-
-func (list *LkdList[T]) Sublist(filter types.Filter[T]) colls.List[T] {
+func (list *LkdList[T]) Sublist(filter tau.Filter[T]) colls.List[T] {
 	sub := Lkd[T]()
 	for node := list.head; node != nil; node = node.next {
 		if filter(node.data) {
@@ -247,7 +263,7 @@ func (list *LkdList[T]) Sublist(filter types.Filter[T]) colls.List[T] {
 	return sub
 }
 
-func (list *LkdList[T]) Sort(comparator types.Comparator[T]) colls.List[T] {
+func (list *LkdList[T]) Sort(comparator tau.Comparator[T]) colls.List[T] {
 	data := make([]T, list.size)
 	for node, i := list.head, 0; node != nil; node, i = node.next, i+1 {
 		data[i] = node.data

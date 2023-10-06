@@ -1,4 +1,4 @@
-package gx
+package tau
 
 import (
 	"encoding/binary"
@@ -8,8 +8,6 @@ import (
 	"reflect"
 
 	"golang.org/x/exp/constraints"
-
-	"github.com/luverolla/lexgo/pkg/types"
 )
 
 // Checks for equality between two values of generic type
@@ -56,15 +54,15 @@ func Min(vals ...any) any {
 // Tries to compare two values of generic type
 // Given a and b the two values (in this order), it returns:
 //
-//	-1 if a < b
-//	 0 if a == b
-//	 1 if a > b
+//   - -1 if a < b
+//   - 0 if a == b
+//   - 1 if a > b
 //
-// It accepts all types under the [constraints.Ordered] interface
-// or types that implement the [types.Comparable] interface
-// For the latter, the function [types.Comparable.Cmp] must be implemented
+// It accepts all tau.under the [constraints.Ordered] interface
+// or tau.that implement the [Comparable] interface
+// For the latter, the function [tau.Comparable.Cmp] must be implemented
 //
-// If the types of a and b are not comparable, it will panic
+// If the type of a and b are not comparable, it will panic
 func Cmp(a, b any) int {
 	switch a.(type) {
 	case int:
@@ -120,10 +118,10 @@ func Cmp(a, b any) int {
 		b := b.(string)
 		return cmp(a, b)
 	default:
-		a, oka := a.(types.Comparable)
-		b, okb := b.(types.Comparable)
+		a, oka := a.(Comparable)
+		b, okb := b.(Comparable)
 		if !oka || !okb {
-			log.Fatalf("ERROR: [unified.Cmp] Types %T and %T are not comparable\r\n", a, b)
+			log.Fatalf("ERROR: [unified.Cmp] tau.%T and %T are not comparable\r\n", a, b)
 		}
 		return a.Cmp(b)
 	}
@@ -131,8 +129,8 @@ func Cmp(a, b any) int {
 
 // Hashes a value of generic type
 // It accepts all numeric and string types
-// It also accepts types that implement the [types.Hashable] interface
-// For the latter, the function [types.Hashable.Hash] must be implemented
+// It also accepts tau.that implement the [tau.Hashable] interface
+// For the latter, the function [tau.Hashable.Hash] must be implemented
 //
 // If the type of given value is not hashable, it will panic
 func Hash(v any) uint32 {
@@ -148,7 +146,7 @@ func Hash(v any) uint32 {
 	case string:
 		return hashString(val)
 	default:
-		conv, ok := val.(types.Hashable)
+		conv, ok := val.(Hashable)
 		if !ok {
 			log.Fatal("ERROR: [unified.Hash] CANNOT HASH TYPE")
 		}
