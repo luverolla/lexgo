@@ -58,8 +58,8 @@ func Min(vals ...any) any {
 //   - 0 if a == b
 //   - 1 if a > b
 //
-// It accepts all tau.under the [constraints.Ordered] interface
-// or tau.that implement the [Comparable] interface
+// It accepts all types under the [constraints.Ordered] interface
+// or types that implement the [Comparable] interface
 // For the latter, the function [tau.Comparable.Cmp] must be implemented
 //
 // If the type of a and b are not comparable, it will panic
@@ -129,7 +129,7 @@ func Cmp(a, b any) int {
 
 // Hashes a value of generic type
 // It accepts all numeric and string types
-// It also accepts tau.that implement the [tau.Hashable] interface
+// It also accepts types that implement the [tau.Hashable] interface
 // For the latter, the function [tau.Hashable.Hash] must be implemented
 //
 // If the type of given value is not hashable, it will panic
