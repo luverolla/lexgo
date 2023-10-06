@@ -1,11 +1,10 @@
-// This package contains implementation for the interface [colls.List]
+// This package contains implementation for the interface [tau.List]
 package list
 
 import (
 	"fmt"
 	"sort"
 
-	"github.com/luverolla/lexgo/pkg/colls"
 	"github.com/luverolla/lexgo/pkg/errs"
 	"github.com/luverolla/lexgo/pkg/tau"
 )
@@ -25,7 +24,7 @@ func Arr[T any](data ...T) *ArrList[T] {
 
 // --- Methods from Collection[T] ---
 func (list *ArrList[T]) String() string {
-	s := "Array["
+	s := "ArrList["
 	for index, value := range list.data {
 		if index != 0 {
 			s += ","
@@ -97,7 +96,7 @@ func (list *ArrList[T]) Clone() tau.Collection[T] {
 	return Arr(list.data...)
 }
 
-// --- Methods from IdxedCollection[T] ---
+// --- Methods from IdxedColl[T] ---
 func (list *ArrList[T]) Get(index int) (*T, error) {
 	if list.Empty() {
 		return nil, errs.Empty()
@@ -154,7 +153,7 @@ func (list *ArrList[T]) Swap(i, j int) {
 	list.data[i], list.data[j] = list.data[j], list.data[i]
 }
 
-func (list *ArrList[T]) Slice(start, end int) tau.IdxedCollection[T] {
+func (list *ArrList[T]) Slice(start, end int) tau.IdxedColl[T] {
 	if start >= end || start == end {
 		return Arr[T]()
 	}
@@ -181,7 +180,7 @@ func (list *ArrList[T]) Prepend(data ...T) {
 func (list *ArrList[T]) RemoveFirst(data T) error {
 	index := list.IndexOf(data)
 	if index == -1 {
-		return errs.NotFound()
+		return errs.NotFound(data)
 	}
 	list.RemoveAt(index)
 	return nil
@@ -190,7 +189,7 @@ func (list *ArrList[T]) RemoveFirst(data T) error {
 func (list *ArrList[T]) RemoveAll(data T) error {
 	index := list.IndexOf(data)
 	if index == -1 {
-		return errs.NotFound()
+		return errs.NotFound(data)
 	}
 	for index != -1 {
 		list.RemoveAt(index)
@@ -199,7 +198,7 @@ func (list *ArrList[T]) RemoveAll(data T) error {
 	return nil
 }
 
-func (list *ArrList[T]) Sort(comparator tau.Comparator[T]) colls.List[T] {
+func (list *ArrList[T]) Sort(comparator tau.Comparator[T]) tau.List[T] {
 	data := make([]T, len(list.data))
 	copy(data, list.data)
 	sort.Slice(data, func(i, j int) bool {
@@ -209,7 +208,7 @@ func (list *ArrList[T]) Sort(comparator tau.Comparator[T]) colls.List[T] {
 }
 
 // create a new list with the data that satisfies the filter function
-func (list *ArrList[T]) Sublist(filter tau.Filter[T]) colls.List[T] {
+func (list *ArrList[T]) Sublist(filter tau.Filter[T]) tau.List[T] {
 	data := make([]T, 0)
 	for _, value := range list.data {
 		if filter(value) {

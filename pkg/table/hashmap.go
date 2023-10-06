@@ -94,11 +94,21 @@ func (table *HshMap[K, V]) ContainsAny(other tau.Collection[K]) bool {
 	return false
 }
 
+func (table *HshMap[K, V]) Clone() tau.Collection[K] {
+	clone := Hsh[K, V]()
+	iter := table.Iter()
+	for next, hasNext := iter.Next(); hasNext; next, hasNext = iter.Next() {
+		value, _ := table.Get(*next)
+		clone.Put(*next, *value)
+	}
+	return clone
+}
+
 // --- Methods from Map[K, V] ---
 func (table *HshMap[K, V]) Get(key K) (*V, error) {
 	index := table.indexOf(key)
 	if index == -1 {
-		return nil, errs.NotFound()
+		return nil, errs.NotFound(key)
 	}
 	return &table.inner[index].value, nil
 }
@@ -120,7 +130,7 @@ func (table *HshMap[K, V]) HasKey(key K) bool {
 func (table *HshMap[K, V]) Remove(key K) (*V, error) {
 	index := table.indexOf(key)
 	if index == -1 {
-		return nil, errs.NotFound()
+		return nil, errs.NotFound(key)
 	}
 	value := table.inner[index].value
 	table.inner = append(table.inner[:index], table.inner[index+1:]...)

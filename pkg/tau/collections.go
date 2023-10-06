@@ -1,17 +1,8 @@
-// This package contains interfaces [tau.Cmp] for various collections.
-// The generic type parameter T allows any time that fits into the
-// [tau.Cmp] comparing function, therefore limited, at run-time, by
-//   - types under [constraints.Ordered] constraint
-//   - types implementing [tau.Base]
-package colls
-
-import (
-	"github.com/luverolla/lexgo/pkg/tau"
-)
+package tau
 
 // Generic list with index access
 type List[T any] interface {
-	tau.IdxedColl[T]
+	IdxedColl[T]
 	Append(...T)
 	Prepend(...T)
 	// Removes the first occurrence of the given value
@@ -22,16 +13,16 @@ type List[T any] interface {
 	RemoveAll(T) error
 	// Sorts the list using the given comparator
 	// A copy of the list is made, so the original list is not modified
-	Sort(tau.Comparator[T]) List[T]
+	Sort(Comparator[T]) List[T]
 	// Returns a new list containing the elements for which the given filter returns true
 	// It makes a copy of the list, so the original one is not modified
-	Sublist(tau.Filter[T]) List[T]
+	Sublist(Filter[T]) List[T]
 }
 
 // Generic (D)ouble-(e)nded (que)ue
 // It allows both FIFO (queue-like) and LIFO (stack-like) access
 type Deque[T any] interface {
-	tau.Collection[T]
+	Collection[T]
 	// Adds the given value to the front of the queue
 	PushFront(...T)
 	// Adds the given value to the back of the queue
@@ -49,15 +40,15 @@ type Deque[T any] interface {
 	// Returns an error if the queue is empty
 	Back() (*T, error)
 	// Returns an iterator that iterates over the queue in FIFO order
-	FIFOIter() tau.Iterator[T]
+	FIFOIter() Iterator[T]
 	// Returns an iterator that iterates over the queue in LIFO order
-	LIFOIter() tau.Iterator[T]
+	LIFOIter() Iterator[T]
 }
 
 // Generic node for a binary tree
 // It is allowed to be nil, hence must be implemented as a pointer
 type BSTreeNode[T any] interface {
-	tau.Box[T]
+	Box[T]
 	// Returns the left child node or nil if it does not exist
 	Left() BSTreeNode[T]
 	// Returns the right child node or nil if it does not exist
@@ -66,7 +57,7 @@ type BSTreeNode[T any] interface {
 
 // Generic binary search tree
 type BSTree[T any] interface {
-	tau.Collection[T]
+	Collection[T]
 	// Returns the node containing the given value
 	Get(T) BSTreeNode[T]
 	// Returns the root node
@@ -88,18 +79,18 @@ type BSTree[T any] interface {
 	// Returns the node containing the successor of the given value
 	Succ(T) BSTreeNode[T]
 	// Returns an iterator that iterates over the tree in pre-order
-	PreOrder() tau.Iterator[T]
+	PreOrder() Iterator[T]
 	// Returns an iterator that iterates over the tree in in-order
-	InOrder() tau.Iterator[T]
+	InOrder() Iterator[T]
 	// Returns an iterator that iterates over the tree in post-order
-	PostOrder() tau.Iterator[T]
+	PostOrder() Iterator[T]
 }
 
 // Generic map
 // The key MUST be a primary type (under [constraints.Ordered])
 // while the type parameter can be really anything
 type Map[K any, V any] interface {
-	tau.Collection[K]
+	Collection[K]
 	// Associates the given value with the given key
 	Put(K, V)
 	// Returns the value associated with the given key
@@ -111,7 +102,7 @@ type Map[K any, V any] interface {
 	// Returns true if the map contains the given key
 	HasKey(K) bool
 	// Returns an iterator that iterates over the keys of the map
-	Keys() tau.Iterator[K]
+	Keys() Iterator[K]
 	// Returns an iterator that iterates over the values of the map
-	Values() tau.Iterator[V]
+	Values() Iterator[V]
 }

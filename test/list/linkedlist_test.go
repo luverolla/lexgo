@@ -3,7 +3,6 @@ package list_test
 import (
 	"testing"
 
-	"github.com/luverolla/lexgo/pkg/colls"
 	"github.com/luverolla/lexgo/pkg/list"
 	"github.com/luverolla/lexgo/pkg/tau"
 )
@@ -11,8 +10,8 @@ import (
 var data_int = []int{4, 7, 9, 2547347383, 50, 78, 9, 77, 32, 9}
 var data_str = []string{"ciao", "", "becco", "\r\n", "hey!", "", "castoro"}
 
-var lkl_int colls.List[int]
-var lkl_str colls.List[string]
+var lkl_int tau.List[int]
+var lkl_str tau.List[string]
 
 func TestLinkedListAdd(t *testing.T) {
 	lkl_int = list.Lkd[int](data_int...)

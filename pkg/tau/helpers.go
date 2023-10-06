@@ -72,7 +72,7 @@ type Collection[T any] interface {
 	Clone() Collection[T]
 }
 
-// Generic list with indexwise access. It allows duplicates
+// Generic collection with indexwise access. It allows duplicates
 //
 // All implementation provides a circular access,
 // like in other languages as Python. Meaning that:
@@ -91,7 +91,7 @@ type Collection[T any] interface {
 //	endif
 //	index = index % size
 //	OUTPUT(index)
-type IdxedCollection[T any] interface {
+type IdxedColl[T any] interface {
 	Collection[T]
 	// Returns the element at the given index
 	// Returns an error if the collection is empty
@@ -124,7 +124,7 @@ type IdxedCollection[T any] interface {
 	// 	- start == end: returns an empty collection
 	// 	- start > end: start and end are swapped
 	// After these checks, the aforementioned index sanification is applied
-	Slice(int, int) IdxedCollection[T]
+	Slice(int, int) IdxedColl[T]
 }
 
 // Interface for filtering functions.

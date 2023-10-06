@@ -1,6 +1,8 @@
 package deque
 
 import (
+	"fmt"
+
 	"github.com/luverolla/lexgo/pkg/list"
 	"github.com/luverolla/lexgo/pkg/tau"
 )
@@ -17,7 +19,19 @@ func Lkd[T any](data ...T) *LkDeque[T] {
 
 // --- Methods from Collection[T] ---
 func (deque *LkDeque[T]) String() string {
-	return deque.inner.String()
+	s := "LkDeque[front->"
+	iter := deque.Iter()
+	first := true
+	for next, hasNext := iter.Next(); hasNext; next, hasNext = iter.Next() {
+		if first {
+			first = false
+		} else {
+			s += ","
+		}
+		s += fmt.Sprintf("%v", *next)
+	}
+	s += "<-back]"
+	return s
 }
 
 func (deque *LkDeque[T]) Cmp(other any) int {
@@ -53,7 +67,7 @@ func (deque *LkDeque[T]) ContainsAny(c tau.Collection[T]) bool {
 }
 
 func (deque *LkDeque[T]) Clone() tau.Collection[T] {
-	return LkDeque[T]{deque.inner.Clone().(*list.LkdList[T])}
+	return &LkDeque[T]{deque.inner.Clone().(*list.LkdList[T])}
 }
 
 // --- Methods from Deque[T] ---

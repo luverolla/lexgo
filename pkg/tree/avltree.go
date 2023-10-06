@@ -1,11 +1,10 @@
-// This package contains implementation for the interface [colls.BSTree]
+// This package contains implementation for the interface [tau.BSTree]
 package tree
 
 import (
 	"fmt"
 	"log"
 
-	"github.com/luverolla/lexgo/pkg/colls"
 	"github.com/luverolla/lexgo/pkg/deque"
 	"github.com/luverolla/lexgo/pkg/tau"
 )
@@ -13,22 +12,17 @@ import (
 // Binary search tree implemented with an AVL tree
 type AVLTree[T any] struct {
 	root *avlNode[T]
-	cmp  tau.Comparator[T]
 	size int
 }
 
 // Creates a new binary search tree implemented with an AVL tree
 func AVL[T any]() *AVLTree[T] {
-	return &AVLTree[T]{nil, nil, 0}
-}
-
-func AVLCmp[T any](cmp tau.Comparator[T]) *AVLTree[T] {
-	return &AVLTree[T]{nil, cmp, 0}
+	return &AVLTree[T]{nil, 0}
 }
 
 // --- Methods from Collection[T] ---
 func (t *AVLTree[T]) String() string {
-	s := "AVL["
+	s := "AVLTree["
 	iter := t.Iter()
 	next, hasNext := iter.Next()
 	for hasNext {
@@ -55,7 +49,7 @@ func (t *AVLTree[T]) Cmp(other any) int {
 	next, hasNext := iter.Next()
 	otherNext, hasOtherNext := otherIter.Next()
 	for hasNext && hasOtherNext {
-		cmp := t.compare(*next, *otherNext)
+		cmp := tau.Cmp(*next, *otherNext)
 		if cmp != 0 {
 			return cmp
 		}
@@ -107,7 +101,7 @@ func (t *AVLTree[T]) Iter() tau.Iterator[T] {
 }
 
 // --- Methods from BSTree[T] ---
-func (t *AVLTree[T]) Get(val T) colls.BSTreeNode[T] {
+func (t *AVLTree[T]) Get(val T) tau.BSTreeNode[T] {
 	node := t.getNode(t.root, val)
 	if node == nil {
 		return nil
@@ -115,17 +109,17 @@ func (t *AVLTree[T]) Get(val T) colls.BSTreeNode[T] {
 	return node
 }
 
-func (t *AVLTree[T]) Root() colls.BSTreeNode[T] {
+func (t *AVLTree[T]) Root() tau.BSTreeNode[T] {
 	return t.root
 }
 
-func (t *AVLTree[T]) Insert(val T) colls.BSTreeNode[T] {
+func (t *AVLTree[T]) Insert(val T) tau.BSTreeNode[T] {
 	t.root = t.insert(t.root, val)
 	t.size++
 	return t.root
 }
 
-func (t *AVLTree[T]) Remove(val T) colls.BSTreeNode[T] {
+func (t *AVLTree[T]) Remove(val T) tau.BSTreeNode[T] {
 	if t.root == nil {
 		return nil
 	}
@@ -134,19 +128,19 @@ func (t *AVLTree[T]) Remove(val T) colls.BSTreeNode[T] {
 	return t.root
 }
 
-func (t *AVLTree[T]) Min() colls.BSTreeNode[T] {
+func (t *AVLTree[T]) Min() tau.BSTreeNode[T] {
 	return t.min(t.root)
 }
 
-func (t *AVLTree[T]) Max() colls.BSTreeNode[T] {
+func (t *AVLTree[T]) Max() tau.BSTreeNode[T] {
 	return t.max(t.root)
 }
 
-func (t *AVLTree[T]) Pred(val T) colls.BSTreeNode[T] {
+func (t *AVLTree[T]) Pred(val T) tau.BSTreeNode[T] {
 	return t.pred(t.root, val)
 }
 
-func (t *AVLTree[T]) Succ(val T) colls.BSTreeNode[T] {
+func (t *AVLTree[T]) Succ(val T) tau.BSTreeNode[T] {
 	return t.succ(t.root, val)
 }
 
@@ -162,14 +156,6 @@ func (t *AVLTree[T]) PostOrder() tau.Iterator[T] {
 	return newAVLPostOrderIter(t)
 }
 
-// --- Private Methods ---
-func (t *AVLTree[T]) compare(a, b T) int {
-	if t.cmp == nil {
-		return tau.Cmp(a, b)
-	}
-	return t.cmp(a, b)
-}
-
 // --- Node struct and methods ---
 type avlNode[T any] struct {
 	val   T
@@ -181,11 +167,11 @@ func (n *avlNode[T]) Value() T {
 	return n.val
 }
 
-func (n *avlNode[T]) Left() colls.BSTreeNode[T] {
+func (n *avlNode[T]) Left() tau.BSTreeNode[T] {
 	return n.left
 }
 
-func (n *avlNode[T]) Right() colls.BSTreeNode[T] {
+func (n *avlNode[T]) Right() tau.BSTreeNode[T] {
 	return n.right
 }
 
@@ -194,9 +180,9 @@ func (t *AVLTree[T]) getNode(n *avlNode[T], val T) *avlNode[T] {
 		return nil
 	}
 	switch {
-	case t.compare(val, n.val) < 0:
+	case tau.Cmp(val, n.val) < 0:
 		return t.getNode(n.left, val)
-	case t.compare(val, n.val) > 0:
+	case tau.Cmp(val, n.val) > 0:
 		return t.getNode(n.right, val)
 	}
 	return n
@@ -207,9 +193,9 @@ func (t *AVLTree[T]) insert(n *avlNode[T], val T) *avlNode[T] {
 		return &avlNode[T]{val, nil, nil}
 	}
 	switch {
-	case t.compare(val, n.val) < 0:
+	case tau.Cmp(val, n.val) < 0:
 		n.left = t.insert(n.left, val)
-	case t.compare(val, n.val) > 0:
+	case tau.Cmp(val, n.val) > 0:
 		n.right = t.insert(n.right, val)
 	}
 	return t.rebalance(n)
@@ -220,9 +206,9 @@ func (t *AVLTree[T]) remove(n *avlNode[T], val T) *avlNode[T] {
 		return nil
 	}
 	switch {
-	case t.compare(val, n.val) < 0:
+	case tau.Cmp(val, n.val) < 0:
 		n.left = t.remove(n.left, val)
-	case t.compare(val, n.val) > 0:
+	case tau.Cmp(val, n.val) > 0:
 		n.right = t.remove(n.right, val)
 	default:
 		if n.left == nil {
@@ -260,9 +246,9 @@ func (t *AVLTree[T]) pred(n *avlNode[T], val T) *avlNode[T] {
 		return nil
 	}
 	switch {
-	case t.compare(val, n.val) < 0:
+	case tau.Cmp(val, n.val) < 0:
 		return t.pred(n.left, val)
-	case t.compare(val, n.val) > 0:
+	case tau.Cmp(val, n.val) > 0:
 		return t.pred(n.right, val)
 	default:
 		if n.left != nil {
@@ -277,9 +263,9 @@ func (t *AVLTree[T]) succ(n *avlNode[T], val T) *avlNode[T] {
 		return nil
 	}
 	switch {
-	case t.compare(val, n.val) < 0:
+	case tau.Cmp(val, n.val) < 0:
 		return t.succ(n.left, val)
-	case t.compare(val, n.val) > 0:
+	case tau.Cmp(val, n.val) > 0:
 		return t.succ(n.right, val)
 	default:
 		if n.right != nil {
@@ -337,7 +323,7 @@ func (t *AVLTree[T]) rebalance(n *avlNode[T]) *avlNode[T] {
 // --- Iterator ---
 type avlPreOrderIter[T any] struct {
 	tree  *AVLTree[T]
-	stack colls.Deque[avlNode[T]]
+	stack tau.Deque[avlNode[T]]
 }
 
 func newAVLPreOrderIter[T any](tree *AVLTree[T]) *avlPreOrderIter[T] {
@@ -370,7 +356,7 @@ func (iter *avlPreOrderIter[T]) Each(f func(T)) {
 
 type avlInOrderIter[T any] struct {
 	tree  *AVLTree[T]
-	stack colls.Deque[avlNode[T]]
+	stack tau.Deque[avlNode[T]]
 }
 
 func newAVLInOrderIter[T any](tree *AVLTree[T]) *avlInOrderIter[T] {
@@ -402,7 +388,7 @@ func (iter *avlInOrderIter[T]) Each(f func(T)) {
 
 type avlPostOrderIter[T any] struct {
 	tree  *AVLTree[T]
-	stack colls.Deque[avlNode[T]]
+	stack tau.Deque[avlNode[T]]
 }
 
 func newAVLPostOrderIter[T any](tree *AVLTree[T]) *avlPostOrderIter[T] {

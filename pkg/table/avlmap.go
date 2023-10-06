@@ -1,4 +1,4 @@
-// This package contains implementation for the interface [colls.Map]
+// This package contains implementation for the interface [tau.Map]
 package table
 
 import (
@@ -22,7 +22,16 @@ func AVL[K any, V any]() *AVLMap[K, V] {
 
 // --- Methods from Collection[MapEntry[K, V]] ---
 func (table *AVLMap[K, V]) String() string {
-	return table.tree.String()
+	s := "AVLMap["
+	iter := table.tree.Iter()
+	for next, hasNext := iter.Next(); hasNext; next, hasNext = iter.Next() {
+		s += fmt.Sprintf("%v", *next)
+		if hasNext {
+			s += ","
+		}
+	}
+	s += "]"
+	return s
 }
 
 func (table *AVLMap[K, V]) Cmp(other any) int {
@@ -69,6 +78,15 @@ func (table *AVLMap[K, V]) ContainsAny(c tau.Collection[K]) bool {
 	return false
 }
 
+func (table *AVLMap[K, V]) Clone() tau.Collection[K] {
+	clone := AVL[K, V]()
+	iter := table.tree.InOrder()
+	for next, hasNext := iter.Next(); hasNext; next, hasNext = iter.Next() {
+		clone.Put(next.key, *next.value)
+	}
+	return clone
+}
+
 // --- Methods from Map[K, V] ---
 func (table *AVLMap[K, V]) Get(key K) (*V, error) {
 	if table.Empty() {
@@ -77,7 +95,7 @@ func (table *AVLMap[K, V]) Get(key K) (*V, error) {
 	entry := avlEntry[K, V]{key, nil}
 	node := table.tree.Get(entry)
 	if node == nil {
-		return nil, errs.NotFound()
+		return nil, errs.NotFound(key)
 	}
 	return node.Value().value, nil
 }
@@ -98,7 +116,7 @@ func (table *AVLMap[K, V]) Remove(key K) (*V, error) {
 	entry := avlEntry[K, V]{key, nil}
 	node := table.tree.Get(entry)
 	if node == nil {
-		return nil, errs.NotFound()
+		return nil, errs.NotFound(key)
 	}
 	table.tree.Remove(entry)
 	return node.Value().value, nil

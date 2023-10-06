@@ -1,4 +1,4 @@
-// This package contains implementation for the interface [colls.Deque]
+// This package contains implementation for the interface [tau.Deque]
 package deque
 
 import (
@@ -21,14 +21,14 @@ func Arr[T any](data ...T) *ArrDeque[T] {
 
 // --- Methods from Collection[T] ---
 func (deque *ArrDeque[T]) String() string {
-	s := "Array["
+	s := "ArrDeque[front->"
 	for index, value := range deque.data {
 		if index != 0 {
 			s += ","
 		}
 		s += fmt.Sprintf("%v", value)
 	}
-	s += "]"
+	s += "<-back]"
 	return s
 }
 

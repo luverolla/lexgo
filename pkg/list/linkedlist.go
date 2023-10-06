@@ -5,7 +5,6 @@ import (
 	"log"
 	"sort"
 
-	"github.com/luverolla/lexgo/pkg/colls"
 	"github.com/luverolla/lexgo/pkg/errs"
 	"github.com/luverolla/lexgo/pkg/tau"
 )
@@ -26,7 +25,7 @@ func Lkd[T any](data ...T) *LkdList[T] {
 
 // --- Methods from Collection[T] ---
 func (list *LkdList[T]) String() string {
-	s := "Linked["
+	s := "LkdList["
 	iter := list.Iter()
 	next, hasNext := iter.Next()
 	for hasNext {
@@ -109,7 +108,7 @@ func (list *LkdList[T]) Clone() tau.Collection[T] {
 	return list.Slice(0, list.size)
 }
 
-// --- Methods from IdxedCollection[T] ---
+// --- Methods from IdxedColl[T] ---
 func (list *LkdList[T]) Get(index int) (*T, error) {
 	if list.Empty() {
 		return nil, errs.Empty()
@@ -185,12 +184,12 @@ func (list *LkdList[T]) Swap(i, j int) {
 	nodeI.data, nodeJ.data = nodeJ.data, nodeI.data
 }
 
-func (list *LkdList[T]) Slice(start, end int) tau.IdxedCollection[T] {
+func (list *LkdList[T]) Slice(start, end int) tau.IdxedColl[T] {
 	if list.Empty() || start == end {
 		return Lkd[T]()
 	}
 	var actStart = list.sanify(start)
-	var actEnd = list.sanify(end)
+	var actEnd = list.sanify(end-1) + 1
 
 	if actStart > actEnd {
 		actStart, actEnd = actEnd, actStart
@@ -235,7 +234,7 @@ func (list *LkdList[T]) Prepend(data ...T) {
 func (list *LkdList[T]) RemoveFirst(data T) error {
 	index := list.IndexOf(data)
 	if index == -1 {
-		return errs.NotFound()
+		return errs.NotFound(data)
 	}
 	list.RemoveAt(index)
 	return nil
@@ -244,7 +243,7 @@ func (list *LkdList[T]) RemoveFirst(data T) error {
 func (list *LkdList[T]) RemoveAll(data T) error {
 	index := list.IndexOf(data)
 	if index == -1 {
-		return errs.NotFound()
+		return errs.NotFound(data)
 	}
 	for index != -1 {
 		list.RemoveAt(index)
@@ -253,7 +252,7 @@ func (list *LkdList[T]) RemoveAll(data T) error {
 	return nil
 }
 
-func (list *LkdList[T]) Sublist(filter tau.Filter[T]) colls.List[T] {
+func (list *LkdList[T]) Sublist(filter tau.Filter[T]) tau.List[T] {
 	sub := Lkd[T]()
 	for node := list.head; node != nil; node = node.next {
 		if filter(node.data) {
@@ -263,7 +262,7 @@ func (list *LkdList[T]) Sublist(filter tau.Filter[T]) colls.List[T] {
 	return sub
 }
 
-func (list *LkdList[T]) Sort(comparator tau.Comparator[T]) colls.List[T] {
+func (list *LkdList[T]) Sort(comparator tau.Comparator[T]) tau.List[T] {
 	data := make([]T, list.size)
 	for node, i := list.head, 0; node != nil; node, i = node.next, i+1 {
 		data[i] = node.data

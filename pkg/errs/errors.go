@@ -1,16 +1,21 @@
 // This package contains custom error and error messages
 package errs
 
+import "fmt"
+
 // This error is thrown when a method attempts to access an element,
 // in a collection, that does not exist
-type NotFoundErr struct{}
+type NotFoundErr struct {
+	// The value of the element that was not found
+	Value any
+}
 
-func NotFound() NotFoundErr {
-	return NotFoundErr{}
+func NotFound(v any) NotFoundErr {
+	return NotFoundErr{v}
 }
 
 func (err NotFoundErr) Error() string {
-	return "Not found"
+	return fmt.Sprintf("Element %v not found", err.Value)
 }
 
 // This error is thrown when a method attempts to Get/Peek/Pop/Remove

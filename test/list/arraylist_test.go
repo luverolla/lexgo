@@ -3,7 +3,6 @@ package list_test
 import (
 	"testing"
 
-	"github.com/luverolla/lexgo/pkg/colls"
 	"github.com/luverolla/lexgo/pkg/list"
 	"github.com/luverolla/lexgo/pkg/tau"
 )
@@ -11,8 +10,8 @@ import (
 var data_int_2 = []int{4, 7, 9, 2547347383, 50, 78, 9, 77, 32, 9}
 var data_str_2 = []string{"ciao", "", "becco", "\r\n", "hey!", "", "castoro"}
 
-var arl_int colls.List[int]
-var arl_str colls.List[string]
+var arl_int tau.List[int]
+var arl_str tau.List[string]
 
 func TestArrayListAdd(t *testing.T) {
 	arl_int = list.Arr[int](data_int_2...)

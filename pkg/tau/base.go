@@ -1,4 +1,4 @@
-// (T)ype-(a)gnostic (u)tils
+// (T)ype-(a)gnostic (u)tilities
 //
 // This package contains a set of type-agnostic interface and functions.
 // It is the core of this library and acts as a bridge between objects
@@ -33,11 +33,16 @@ type Base interface {
 	Comparable
 }
 
+// Generic container for a value
 type Box[T any] interface {
 	// Returns the value contained in the box
 	Value() T
 }
 
+// Generic container for a pair of values
+// It's suitable for both ordered and unordered pairs
+// The semantics of the First() and Last() functions
+// is up to the concrete implementation
 type Pair[A any, B any] interface {
 	// Returns the first element of the pair
 	First() A
