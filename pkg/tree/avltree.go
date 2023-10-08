@@ -103,7 +103,7 @@ func (t *AVLTree[T]) Iter() tau.Iterator[T] {
 // --- Methods from BSTree[T] ---
 func (t *AVLTree[T]) Get(val T) tau.BSTreeNode[T] {
 	node := t.getNode(t.root, val)
-	if node == nil {
+	if tau.Nil(node) {
 		return nil
 	}
 	return node
@@ -120,7 +120,7 @@ func (t *AVLTree[T]) Insert(val T) tau.BSTreeNode[T] {
 }
 
 func (t *AVLTree[T]) Remove(val T) tau.BSTreeNode[T] {
-	if t.root == nil {
+	if tau.Nil(t.root) {
 		return nil
 	}
 	t.root = t.remove(t.root, val)
@@ -176,7 +176,7 @@ func (n *avlNode[T]) Right() tau.BSTreeNode[T] {
 }
 
 func (t *AVLTree[T]) getNode(n *avlNode[T], val T) *avlNode[T] {
-	if n == nil {
+	if tau.Nil(n) {
 		return nil
 	}
 	switch {
@@ -189,7 +189,7 @@ func (t *AVLTree[T]) getNode(n *avlNode[T], val T) *avlNode[T] {
 }
 
 func (t *AVLTree[T]) insert(n *avlNode[T], val T) *avlNode[T] {
-	if n == nil {
+	if tau.Nil(n) {
 		return &avlNode[T]{val, nil, nil}
 	}
 	switch {
@@ -202,7 +202,7 @@ func (t *AVLTree[T]) insert(n *avlNode[T], val T) *avlNode[T] {
 }
 
 func (t *AVLTree[T]) remove(n *avlNode[T], val T) *avlNode[T] {
-	if n == nil {
+	if tau.Nil(n) {
 		return nil
 	}
 	switch {
@@ -211,10 +211,10 @@ func (t *AVLTree[T]) remove(n *avlNode[T], val T) *avlNode[T] {
 	case tau.Cmp(val, n.val) > 0:
 		n.right = t.remove(n.right, val)
 	default:
-		if n.left == nil {
+		if tau.Nil(n.left) {
 			return n.right
 		}
-		if n.right == nil {
+		if tau.Nil(n.right) {
 			return n.left
 		}
 		n.val = t.min(n.right).val
@@ -228,21 +228,21 @@ func (t *AVLTree[T]) contains(n *avlNode[T], val T) bool {
 }
 
 func (t *AVLTree[T]) min(n *avlNode[T]) *avlNode[T] {
-	if n.left == nil {
+	if tau.Nil(n.left) {
 		return n
 	}
 	return t.min(n.left)
 }
 
 func (t *AVLTree[T]) max(n *avlNode[T]) *avlNode[T] {
-	if n.right == nil {
+	if tau.Nil(n.right) {
 		return n
 	}
 	return t.max(n.right)
 }
 
 func (t *AVLTree[T]) pred(n *avlNode[T], val T) *avlNode[T] {
-	if n == nil {
+	if tau.Nil(n) {
 		return nil
 	}
 	switch {
@@ -259,7 +259,7 @@ func (t *AVLTree[T]) pred(n *avlNode[T], val T) *avlNode[T] {
 }
 
 func (t *AVLTree[T]) succ(n *avlNode[T], val T) *avlNode[T] {
-	if n == nil {
+	if tau.Nil(n) {
 		return nil
 	}
 	switch {
@@ -276,14 +276,14 @@ func (t *AVLTree[T]) succ(n *avlNode[T], val T) *avlNode[T] {
 }
 
 func (t *AVLTree[T]) height(n *avlNode[T]) int {
-	if n == nil {
+	if tau.Nil(n) {
 		return 0
 	}
 	return 1 + max(t.height(n.left), t.height(n.right))
 }
 
 func (t *AVLTree[T]) balanceFactor(n *avlNode[T]) int {
-	if n == nil {
+	if tau.Nil(n) {
 		return 0
 	}
 	return t.height(n.left) - t.height(n.right)

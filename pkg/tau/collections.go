@@ -106,3 +106,20 @@ type Map[K any, V any] interface {
 	// Returns an iterator that iterates over the values of the map
 	Values() Iterator[V]
 }
+
+// Generic set
+// A set is a collection of unique values
+type Set[T any] interface {
+	Collection[T]
+	// Adds the given values to the set
+	// If one or more values are already present, they are skipped
+	Add(...T)
+	// Removes the given value from the set
+	// Returns an error if the value is not found
+	Remove(T) error
+	// Returns a subset of the set containing only elements that
+	// satisfy the given filter
+	//
+	// A copy of the set is made, so the original set is not modified
+	Subset(Filter[T]) Set[T]
+}

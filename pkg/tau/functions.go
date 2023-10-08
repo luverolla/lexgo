@@ -10,6 +10,13 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+// Checks if an object, of any type, is nil.
+//
+// See [reflect.Value.IsNil]
+func Nil(v any) bool {
+	return v == nil || reflect.ValueOf(v).IsNil()
+}
+
 // Checks for equality between two values of generic type
 //
 // See [Cmp]

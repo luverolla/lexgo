@@ -20,21 +20,21 @@ func Hsh[K any, V any]() *HshMap[K, V] {
 
 // --- Methods from Collection[MapEntry[K, V]] ---
 func (table *HshMap[K, V]) String() string {
-	s := "HshMap["
+	s := "HshMap{"
 	for index, value := range table.inner {
 		if index != 0 {
 			s += ","
 		}
 		s += fmt.Sprintf("%v", value)
 	}
-	s += "]"
+	s += "}"
 	return s
 }
 
 func (table *HshMap[K, V]) Cmp(other any) int {
 	otherTable, ok := other.(*HshMap[K, V])
 	if !ok {
-		return -1
+		panic(fmt.Sprintf("ERROR: [HshMap.Cmp] %v is not a *HshMap", other))
 	}
 	if table.size != otherTable.size {
 		return table.size - otherTable.size

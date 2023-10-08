@@ -22,7 +22,7 @@ func AVL[K any, V any]() *AVLMap[K, V] {
 
 // --- Methods from Collection[MapEntry[K, V]] ---
 func (table *AVLMap[K, V]) String() string {
-	s := "AVLMap["
+	s := "AVLMap{"
 	iter := table.tree.Iter()
 	for next, hasNext := iter.Next(); hasNext; next, hasNext = iter.Next() {
 		s += fmt.Sprintf("%v", *next)
@@ -30,16 +30,34 @@ func (table *AVLMap[K, V]) String() string {
 			s += ","
 		}
 	}
-	s += "]"
+	s += "}"
 	return s
 }
 
 func (table *AVLMap[K, V]) Cmp(other any) int {
-	return table.tree.Cmp(other)
+	oth, ok := other.(*AVLMap[K, V])
+	if !ok {
+		panic(fmt.Sprintf("ERROR: [AVLMap.Cmp] %v is not a *AVLMap", other))
+	}
+
+	if table.Size() != oth.Size() {
+		return table.Size() - oth.Size()
+	}
+
+	iter, otherIter := table.tree.Iter(), oth.tree.Iter()
+	for next, ok := iter.Next(); ok; next, ok = iter.Next() {
+		otherNext, _ := otherIter.Next()
+		cmp := tau.Cmp(*next, *otherNext)
+		if cmp != 0 {
+			return cmp
+		}
+	}
+
+	return 0
 }
 
 func (table *AVLMap[K, V]) Iter() tau.Iterator[K] {
-	return newAvlKeyIter[K](table)
+	return newAVLKeyIter[K](table)
 }
 
 func (table *AVLMap[K, V]) Size() int {
@@ -94,7 +112,7 @@ func (table *AVLMap[K, V]) Get(key K) (*V, error) {
 	}
 	entry := avlEntry[K, V]{key, nil}
 	node := table.tree.Get(entry)
-	if node == nil {
+	if tau.Nil(node) {
 		return nil, errs.NotFound(key)
 	}
 	return node.Value().value, nil
@@ -115,7 +133,7 @@ func (table *AVLMap[K, V]) Remove(key K) (*V, error) {
 	}
 	entry := avlEntry[K, V]{key, nil}
 	node := table.tree.Get(entry)
-	if node == nil {
+	if tau.Nil(node) {
 		return nil, errs.NotFound(key)
 	}
 	table.tree.Remove(entry)
@@ -127,7 +145,7 @@ func (table *AVLMap[K, V]) Keys() tau.Iterator[K] {
 }
 
 func (table *AVLMap[K, V]) Values() tau.Iterator[V] {
-	return newAvlValueIter[K](table)
+	return newAVLValueIter[K](table)
 }
 
 // --- Iterator ---
@@ -135,7 +153,7 @@ type avlKeyIter[K any, V any] struct {
 	inner tau.Iterator[avlEntry[K, V]]
 }
 
-func newAvlKeyIter[K any, V any](table *AVLMap[K, V]) *avlKeyIter[K, V] {
+func newAVLKeyIter[K any, V any](table *AVLMap[K, V]) *avlKeyIter[K, V] {
 	return &avlKeyIter[K, V]{table.tree.InOrder()}
 }
 
@@ -157,7 +175,7 @@ type avlValueIter[K any, V any] struct {
 	inner tau.Iterator[avlEntry[K, V]]
 }
 
-func newAvlValueIter[K any, V any](table *AVLMap[K, V]) *avlValueIter[K, V] {
+func newAVLValueIter[K any, V any](table *AVLMap[K, V]) *avlValueIter[K, V] {
 	return &avlValueIter[K, V]{table.tree.InOrder()}
 }
 

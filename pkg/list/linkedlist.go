@@ -206,7 +206,7 @@ func (list *LkdList[T]) Slice(start, end int) tau.IdxedColl[T] {
 func (list *LkdList[T]) Append(data ...T) {
 	for _, value := range data {
 		newTail := &node[T]{data: value}
-		if list.tail == nil {
+		if tau.Nil(list.tail) {
 			list.tail = newTail
 			list.head = newTail
 		} else {
@@ -220,7 +220,7 @@ func (list *LkdList[T]) Append(data ...T) {
 func (list *LkdList[T]) Prepend(data ...T) {
 	for _, value := range data {
 		newHead := &node[T]{data: value}
-		if list.head == nil {
+		if tau.Nil(list.head) {
 			list.head = newHead
 			list.tail = newHead
 		} else {
@@ -299,11 +299,11 @@ func (list *LkdList[T]) getNode(index int) *node[T] {
 }
 
 func (list *LkdList[T]) remove(n *node[T]) {
-	if n == nil {
+	if tau.Nil(n) {
 		log.Fatal("[Linked] attempted to remove a nil node")
 		return
 	}
-	if n.prev == nil {
+	if tau.Nil(n.prev) {
 		list.head = n.next
 		list.head.prev = nil
 	} else {
@@ -312,7 +312,7 @@ func (list *LkdList[T]) remove(n *node[T]) {
 			n.next.prev = n.prev
 		}
 	}
-	if n.next == nil {
+	if tau.Nil(n.next) {
 		list.tail = n.prev
 		list.tail.next = nil
 	} else {
@@ -335,7 +335,7 @@ func newLklIter[T any](list *LkdList[T]) *lklIter[T] {
 }
 
 func (iter *lklIter[T]) Next() (*T, bool) {
-	if iter.node == nil {
+	if tau.Nil(iter.node) {
 		return nil, false
 	}
 	data := iter.node.data
